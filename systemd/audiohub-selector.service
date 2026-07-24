@@ -1,0 +1,14 @@
+[Unit]
+Description=AudioHub source selector
+After=bluealsa.service camilladsp.service bt-open.service
+Wants=bluealsa.service camilladsp.service
+
+[Service]
+Type=simple
+WorkingDirectory=/tmp
+ExecStart=/home/rulio12/audio-power/venv/bin/python3 /home/rulio12/audiohub-selector.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

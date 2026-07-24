@@ -1,0 +1,13 @@
+[Unit]
+Description=CamillaDSP
+After=sound.target
+
+[Service]
+Type=simple
+User=rulio12
+ExecStart=/usr/local/bin/camilladsp -p 1234 -s /home/rulio12/camilladsp/statefile.yml /home/rulio12/camilladsp/configs/camilladsp.yml
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

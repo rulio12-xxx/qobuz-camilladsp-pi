@@ -1,0 +1,14 @@
+[Unit]
+Description=Pilotage automatique alimentation chaine audio
+After=camilladsp.service qobuz-proxy.service
+
+[Service]
+Type=simple
+User=root
+ExecStart=/home/rulio12/audio-power/venv/bin/python /home/rulio12/audio-power/audio-power-monitor.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+

@@ -1,0 +1,285 @@
+devices:
+  samplerate: 44100
+  chunksize: 2048
+  queuelimit: 4
+  silence_threshold: -80
+  silence_timeout: 200
+  enable_rate_adjust: true
+  capture_samplerate: 44100
+  resampler:
+    type: AsyncSinc
+    profile: Balanced
+  capture:
+    type: Alsa
+    channels: 2
+    device: "hw:11,1"
+    format: S16_LE
+  playback:
+    type: Alsa
+    channels: 2
+    device: "hw:2,0"
+    format: S32_LE
+
+filters:
+  preamp:
+    type: Gain
+    parameters:
+      gain: -10.0
+  limiter:
+    type: Limiter
+    parameters:
+      clip_limit: -0.5
+      soft_clip: true
+  filterL_1:
+    type: Biquad
+    parameters:
+      type: Peaking
+      freq: 56.1
+      gain: -3.0
+      q: 5.381
+  filterL_2:
+    type: Biquad
+    parameters:
+      type: Peaking
+      freq: 70.5
+      gain: 6.0
+      q: 2.992
+  filterL_3:
+    type: Biquad
+    parameters:
+      type: Peaking
+      freq: 93.2
+      gain: -7.9
+      q: 4.272
+  filterL_4:
+    type: Biquad
+    parameters:
+      type: Peaking
+      freq: 113.5
+      gain: 4.5
+      q: 4.477
+  filterL_5:
+    type: Biquad
+    parameters:
+      type: Peaking
+      freq: 124.0
+      gain: -4.9
+      q: 7.419
+  filterL_6:
+    type: Biquad
+    parameters:
+      type: Peaking
+      freq: 160.5
+      gain: -8.1
+      q: 4.542
+  filterL_7:
+    type: Biquad
+    parameters:
+      type: Peaking
+      freq: 231.0
+      gain: 4.1
+      q: 6.877
+  filterL_8:
+    type: Biquad
+    parameters:
+      type: Peaking
+      freq: 244.0
+      gain: -4.7
+      q: 4.911
+  filterL_9:
+    type: Biquad
+    parameters:
+      type: Peaking
+      freq: 328.0
+      gain: -5.3
+      q: 2.907
+  filterL_10:
+    type: Biquad
+    parameters:
+      type: Peaking
+      freq: 406.0
+      gain: -6.7
+      q: 4.999
+  filterL_11:
+    type: Biquad
+    parameters:
+      type: Peaking
+      freq: 504.0
+      gain: 6.5
+      q: 1.212
+  filterL_12:
+    type: Biquad
+    parameters:
+      type: Peaking
+      freq: 905.0
+      gain: -1.9
+      q: 5.0
+  filterL_13:
+    type: Biquad
+    parameters:
+      type: Peaking
+      freq: 1494.0
+      gain: -5.6
+      q: 1.052
+  filterL_14:
+    type: Biquad
+    parameters:
+      type: Peaking
+      freq: 1948.0
+      gain: 5.8
+      q: 5.621
+  filterL_15:
+    type: Biquad
+    parameters:
+      type: Peaking
+      freq: 3258.0
+      gain: -3.1
+      q: 4.193
+  filterL_16:
+    type: Biquad
+    parameters:
+      type: Peaking
+      freq: 7427.0
+      gain: -4.2
+      q: 2.793
+  filterR_0:
+    type: Biquad
+    parameters:
+      type: Peaking
+      freq: 56.0
+      gain: 6.0
+      q: 3.500
+  filterR_01:
+    type: Biquad
+    parameters:
+      type: Peaking
+      freq: 64.0
+      gain: 6.0
+      q: 6.000
+  filterR_1:
+    type: Biquad
+    parameters:
+      type: Peaking
+      freq: 150.0
+      gain: -5.0
+      q: 7.180
+  filterR_2:
+    type: Biquad
+    parameters:
+      type: Peaking
+      freq: 223.0
+      gain: -5.5
+      q: 2.791
+  filterR_3:
+    type: Biquad
+    parameters:
+      type: Peaking
+      freq: 304.0
+      gain: -1.2
+      q: 4.999
+  filterR_4:
+    type: Biquad
+    parameters:
+      type: Peaking
+      freq: 447.0
+      gain: -4.6
+      q: 3.907
+  filterR_5:
+    type: Biquad
+    parameters:
+      type: Peaking
+      freq: 501.0
+      gain: 3.2
+      q: 7.496
+  filterR_6:
+    type: Biquad
+    parameters:
+      type: Peaking
+      freq: 663.0
+      gain: 3.1
+      q: 6.966
+  filterR_7:
+    type: Biquad
+    parameters:
+      type: Peaking
+      freq: 1013.0
+      gain: -4.8
+      q: 2.385
+  filterR_8:
+    type: Biquad
+    parameters:
+      type: Peaking
+      freq: 1632.0
+      gain: -5.9
+      q: 3.217
+  filterR_9:
+    type: Biquad
+    parameters:
+      type: Peaking
+      freq: 2248.0
+      gain: 1.8
+      q: 7.493
+  filterR_10:
+    type: Biquad
+    parameters:
+      type: Peaking
+      freq: 3478.0
+      gain: -2.4
+      q: 2.629
+  filterR_11:
+    type: Biquad
+    parameters:
+      type: Peaking
+      freq: 5587.0
+      gain: 2.6
+      q: 7.308
+  filterR_12:
+    type: Biquad
+    parameters:
+      type: Peaking
+      freq: 7501.0
+      gain: -5.2
+      q: 1.821
+pipeline:
+  - type: Filter
+    channels: [0]
+    names:
+      - preamp
+      - filterL_1
+      - filterL_2
+      - filterL_3
+      - filterL_4
+      - filterL_5
+      - filterL_6
+      - filterL_7
+      - filterL_8
+      - filterL_9
+      - filterL_10
+      - filterL_11
+      - filterL_12
+      - filterL_13
+      - filterL_14
+      - filterL_15
+      - filterL_16
+      - limiter
+  - type: Filter
+    channels: [1]
+    names:
+      - preamp
+      - filterR_0
+      - filterR_01
+      - filterR_1
+      - filterR_2
+      - filterR_3
+      - filterR_4
+      - filterR_5
+      - filterR_6
+      - filterR_7
+      - filterR_8
+      - filterR_9
+      - filterR_10
+      - filterR_11
+      - filterR_12
+      - limiter
+
+
