@@ -14,7 +14,7 @@ from camilladsp import CamillaClient
 
 # ------------- A ADAPTER -------------
 USB_DEV = "3-2"        # identifiant sysfs du DAC (voir instructions)
-IDLE_TIMEOUT = 200       # secondes de pause avant extinction (600 = 10 min)
+IDLE_TIMEOUT = 600       # secondes de pause avant extinction (600 = 10 min)
 DAC_WAKE_DELAY = 3       # secondes laissees au DAC pour se reveiller
 # -------------------------------------
 

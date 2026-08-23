@@ -12,8 +12,8 @@ devices:
   capture:
     type: Alsa
     channels: 2
-    device: "hw:11,1"
-    format: S16_LE
+    device: "hw:10,1"
+    format: F32_LE
   playback:
     type: Alsa
     channels: 2

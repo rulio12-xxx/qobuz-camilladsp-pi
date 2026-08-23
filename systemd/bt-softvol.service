@@ -1,0 +1,6 @@
+[Unit]
+Description=Active le softvolume BlueALSA
+[Service]
+Type=oneshot
+User=rulio12
+ExecStart=/usr/local/bin/bt-softvol.sh

@@ -1,0 +1,12 @@
+[Unit]
+Description=BlueALSA service
+Requires=dbus.service
+After=dbus.service bluetooth.service
+
+[Service]
+Type=dbus
+BusName=org.bluealsa
+ExecStart=/usr/bin/bluealsad -S -p a2dp-sink -c sbc -c aac
+
+[Install]
+WantedBy=multi-user.target

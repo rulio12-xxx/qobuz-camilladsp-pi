@@ -21,10 +21,36 @@ devices:
     format: S32_LE
 
 filters:
+  balance_L:
+    type: Biquad
+    parameters:
+      type: Peaking
+      freq: 790
+      gain: -1.3
+      q: 0.55
+  kick:
+    type: Biquad
+    parameters:
+      type: Peaking
+      freq: 180
+      gain: -2.5
+      q: 0.9
+  delay_L:
+    type: Delay
+    parameters:
+      delay: 1.2
+      unit: ms
+      subsample: true
+  delay_R:
+    type: Delay
+    parameters:
+      delay: 0
+      unit: ms
+      subsample: true
   preamp:
     type: Gain
     parameters:
-      gain: -16.0
+      gain: -14.0
   limiter:
     type: Limiter
     parameters:
@@ -261,6 +287,8 @@ pipeline:
       - filterL_14
       - filterL_15
       - filterL_16
+      - balance_L
+      - delay_L
       - limiter
   - type: Filter
     channels: [1]
@@ -280,6 +308,8 @@ pipeline:
       - filterR_10
       - filterR_11
       - filterR_12
+      - kick
+      - delay_R
       - limiter
 
 
