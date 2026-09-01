@@ -12,8 +12,8 @@ devices:
   capture:
     type: Alsa
     channels: 2
-    device: "hw:10,1"
-    format: F32_LE
+    device: "hw:11,1"
+    format: S16_LE
   playback:
     type: Alsa
     channels: 2
@@ -50,7 +50,7 @@ filters:
   preamp:
     type: Gain
     parameters:
-      gain: -14.0
+      gain: -10.0
   limiter:
     type: Limiter
     parameters:
@@ -289,6 +289,7 @@ pipeline:
       - filterL_16
       - balance_L
       - delay_L
+      - limiter
   - type: Filter
     channels: [1]
     names:
@@ -309,7 +310,6 @@ pipeline:
       - filterR_12
       - kick
       - delay_R
-  - type: Filter
-    channels: [0, 1]
-    names:
       - limiter
+
+

@@ -17,7 +17,7 @@ devices:
   playback:
     type: Alsa
     channels: 2
-    device: "hw:2,0"
+    device: "hw:CARD=II,DEV=0"
     format: S32_LE
 
 filters:
@@ -26,7 +26,7 @@ filters:
     parameters:
       type: Peaking
       freq: 790
-      gain: -1.3
+      gain: -2.3
       q: 0.55
   kick:
     type: Biquad
@@ -68,7 +68,7 @@ filters:
     parameters:
       type: Peaking
       freq: 70.5
-      gain: 6.0
+      gain: 5.5
       q: 2.992
   filterL_3:
     type: Biquad
@@ -173,14 +173,14 @@ filters:
     parameters:
       type: Peaking
       freq: 56.0
-      gain: 6.0
+      gain: 5.5
       q: 3.500
   filterR_01:
     type: Biquad
     parameters:
       type: Peaking
       freq: 64.0
-      gain: 6.0
+      gain: 5.5
       q: 6.000
   filterR_1:
     type: Biquad
@@ -289,7 +289,6 @@ pipeline:
       - filterL_16
       - balance_L
       - delay_L
-      - limiter
   - type: Filter
     channels: [1]
     names:
@@ -310,6 +309,7 @@ pipeline:
       - filterR_12
       - kick
       - delay_R
+  - type: Filter
+    channels: [0, 1]
+    names:
       - limiter
-
-

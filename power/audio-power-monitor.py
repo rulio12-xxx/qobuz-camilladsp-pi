@@ -153,7 +153,7 @@ def wait_dac(timeout=10):
     t0 = time.time()
     while time.time() - t0 < timeout:
         if os.path.exists(f"/sys/bus/usb/devices/{USB_DEV}"):
-            time.sleep(1.0)          # marge d'initialisation audio
+            time.sleep(0.3)          # marge init reduite
             log("DAC detecte sur l'USB")
             return True
         time.sleep(0.2)
@@ -181,7 +181,6 @@ def main():
                     log("Inactivite prolongee : extinction")
                     subprocess.run(["systemctl", "stop", "camilladsp"])
                     time.sleep(2)
-                    #usb_power(False)
                     usb_power5V(False)
                     subprocess.run(["systemctl", "restart", "qobuz-proxy"])
                     log("qobuz-proxy redemarre (etat frais)")
@@ -196,21 +195,19 @@ def main():
             if subprocess.run(["systemctl", "is-active", "--quiet", "camilladsp"]).returncode == 0:
                 log("CamillaDSP actif (relance externe) : retour etat on")
                 usb_power5V(True)
-                #time.sleep(DAC_WAKE_DELAY)
                 wait_dac()
+                subprocess.run(["amixer", "-c", "2", "sset", "'DX5 II'", "100%"])
                 subprocess.run(["systemctl", "restart", "camilladsp"])
                 state = "on"
                 continue
-            #if signal_present():
             if wait_for_signal():
                 log("Signal detecte : rallumage")
-                #usb_power(True)
                 usb_power5V(True)
-                #time.sleep(DAC_WAKE_DELAY)
                 wait_dac()
-                subprocess.run(["systemctl", "start", "camilladsp"])
+                subprocess.run(["amixer", "-c", "2", "sset", "'DX5 II'", "100%"])
+                subprocess.run(["systemctl", "restart", "camilladsp"])
                 state = "on"
-                time.sleep(2)
+                time.sleep(0.5)
             #else:
             #    time.sleep(POLL_OFF)
 

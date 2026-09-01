@@ -25,4 +25,19 @@ cp /usr/local/bin/wifi-watchdog.sh     tools/ 2>/dev/null
 cp ~/volume-remote/vol.py              tools/ 2>/dev/null
 cp ~/delay-tuner/tuner.py              tools/ 2>/dev/null
 
+# --- ajouts recents ---
+mkdir -p hub tube radio
+cp ~/hub/audio-hub.py                             hub/ 2>/dev/null
+cp ~/tube/make_tube_config.py                     tube/ 2>/dev/null
+cp ~/tube/apply_tube.sh                           tube/ 2>/dev/null
+cp ~/camilladsp/configs/*.yml.avant-tube          camilladsp/ 2>/dev/null
+cp ~/radio/mpd.conf                               radio/ 2>/dev/null
+cp /etc/systemd/system/audio-hub.service          systemd/ 2>/dev/null
+cp /etc/systemd/system/audiohub-selector.service  systemd/ 2>/dev/null
+cp /etc/systemd/system/camilladsp.service         systemd/ 2>/dev/null
+cp /etc/systemd/system/camillagui.service         systemd/ 2>/dev/null
+cp /etc/systemd/system/audio-power.service        systemd/ 2>/dev/null
+cp /etc/systemd/system/mpd.service                systemd/ 2>/dev/null
+cp /etc/mpd.conf                                  radio/mpd-system.conf 2>/dev/null
+
 git status --short

@@ -17,7 +17,7 @@ devices:
   playback:
     type: Alsa
     channels: 2
-    device: "hw:2,0"
+    device: "hw:CARD=II,DEV=0"
     format: S32_LE
 
 filters:
@@ -26,7 +26,7 @@ filters:
     parameters:
       type: Peaking
       freq: 790
-      gain: -1.3
+      gain: -2.3
       q: 0.55
   kick:
     type: Biquad

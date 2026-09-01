@@ -1,0 +1,15 @@
+sudo tee /etc/systemd/system/audio-hub.service > /dev/null << 'EOF'
+[Unit]
+Description=Centre de controle chaine audio
+After=network-online.target
+
+[Service]
+Type=simple
+User=rulio12
+ExecStart=/usr/bin/python3 /home/rulio12/hub/audio-hub.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOF

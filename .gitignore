@@ -6,3 +6,11 @@ __pycache__/
 *.pyc
 *.bak
 *.bak.*
+# secrets et fichiers sensibles
+**/token*
+**/*.token
+qobuz-proxy/
+*.level
+logos/
+venv/
+**/*password*

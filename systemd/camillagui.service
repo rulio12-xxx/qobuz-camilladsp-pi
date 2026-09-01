@@ -1,0 +1,14 @@
+[Unit]
+Description=CamillaGUI
+After=camilladsp.service
+
+[Service]
+Type=simple
+User=rulio12
+WorkingDirectory=/home/rulio12/camillagui
+ExecStart=/home/rulio12/camillagui/venv/bin/python /home/rulio12/camillagui/main.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
