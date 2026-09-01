@@ -21,3 +21,18 @@ matériel, incompressible.
 ### Ajustement de la correction de pièce
 Grave un peu fort à l'écoute : filtres 56, 64 et 70 Hz réduits de +6 à
 +5.5 dB (dans les configs .avant-tube, source de la régénération lampes).
+
+## Septembre 2026
+
+### Fiabilisation du démarrage DAC
+DAC référencé en hw:2,0 (numéro de carte). Après reboot, le DAC n'était pas
+toujours énuméré comme carte 2 au démarrage de CamillaDSP → erreur ALSA
+snd_pcm_open → crash en boucle → websocket coupé → sélecteur bloqué (BT muet).
+Correctif : nom stable hw:CARD=II,DEV=0 dans toutes les configs.
+
+### Accélération du réveil
+Réveil ~4s → ~1.5s. Marge init DAC 1.0→0.3s, délai final 2→0.5s dans
+audio-power-monitor.py.
+
+### Ajustement correction de pièce
+Grave un peu fort : filtres 56/64/70 Hz réduits de +6 à +5.5 dB.
