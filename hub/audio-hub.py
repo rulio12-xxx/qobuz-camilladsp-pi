@@ -115,9 +115,72 @@ def status_json():
                 np = "en lecture"
     except Exception:
         pass
+    vol = {"dac": dac_volume(), "cdsp": cdsp_volume(), "qobuz": qobuz_volume()}
     return json.dumps({"services": services, "dac": dac, "loopback": loopback,
                        "rate": rate, "now_playing": np,
-                       "bluetooth": bluetooth_status(), "tube": tube_level()})
+                       "bluetooth": bluetooth_status(), "tube": tube_level(),
+                       "loud": loud_enabled(),
+                       "vol": vol})
+
+
+VENV_PY = "/home/rulio12/audio-power/venv/bin/python3"
+DAC_CTL = "DX5 II"
+
+
+def dac_volume(db=None):
+    """Lit (db=None) ou regle le volume du DAC, en dB."""
+    import re as _re
+    if db is not None:
+        subprocess.run(["amixer", "-c", "II", "sset", DAC_CTL, "--", f"{db}dB"],
+                       capture_output=True)
+    out = subprocess.run(["amixer", "-c", "II", "sget", DAC_CTL],
+                         capture_output=True, text=True).stdout
+    m = _re.search(r"\[(-?\d+\.\d+)dB\]", out)
+    return float(m.group(1)) if m else None
+
+
+def cdsp_volume(db=None):
+    """Lit ou regle le volume principal de CamillaDSP, en dB."""
+    code = "from camilladsp import CamillaClient\n"
+    code += "c=CamillaClient('127.0.0.1',1234)\nc.connect()\n"
+    if db is not None:
+        code += f"c.volume.set_main_volume({db})\n"
+    code += "print(c.volume.main_volume())\n"
+    try:
+        r = subprocess.run([VENV_PY, "-c", code], capture_output=True,
+                           text=True, timeout=5)
+        return float(r.stdout.strip())
+    except Exception:
+        return None
+
+
+def qobuz_volume():
+    """Derniere valeur de volume vue dans les logs du proxy (0-100)."""
+    import re as _re
+    try:
+        out = subprocess.run(["journalctl", "-u", "qobuz-proxy", "-n", "400",
+                              "-o", "cat"], capture_output=True, text=True,
+                             timeout=5).stdout
+    except Exception:
+        return None
+    vals = _re.findall(r"Volume set to (\d+)|volume to app: (\d+)%", out)
+    for a, b in reversed(vals):
+        return int(a or b)
+    return None
+
+
+LOUD_FLAG = "/home/rulio12/loudness/enabled"
+
+
+def loud_enabled():
+    return os.path.exists(LOUD_FLAG)
+
+
+def set_loud(on):
+    if on:
+        open(LOUD_FLAG, "w").close()
+    elif os.path.exists(LOUD_FLAG):
+        os.remove(LOUD_FLAG)
 
 
 def do_action(name):
@@ -128,17 +191,11 @@ def do_action(name):
 
 
 def radio_play(url):
-    subprocess.run(["sudo", "systemctl", "stop", "qobuz-proxy"])
-    subprocess.run(["sudo", "systemctl", "start", "mpd"])
     mpc("clear"); mpc("add", url); mpc("play")
-    subprocess.run(["sudo", "systemctl", "restart", "camilladsp"])
 
 
 def radio_stop():
     mpc("stop")
-    subprocess.run(["sudo", "systemctl", "stop", "mpd"])
-    subprocess.run(["sudo", "systemctl", "start", "qobuz-proxy"])
-    subprocess.run(["sudo", "systemctl", "restart", "camilladsp"])
 
 
 PAGE = """<!DOCTYPE html><html lang="fr"><head>
@@ -169,14 +226,20 @@ iframe{border:0;width:100%;height:100%;background:#fff;}
 .hw{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;}
 .pill{display:inline-flex;align-items:center;gap:7px;font-size:13px;background:#fff;
    border:1px solid #e0e0e0;border-radius:999px;padding:7px 13px;}
-.st{display:flex;align-items:center;gap:14px;width:100%;text-align:left;background:#fff;
-   border:1px solid #ddd;border-radius:10px;padding:12px 16px;font-size:17px;margin-bottom:10px;
-   cursor:pointer;color:var(--bg);font-weight:600;}
-.st img{width:44px;height:44px;object-fit:contain;border-radius:6px;}
+#stations{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px;}
+.st{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
+   text-align:center;background:#fff;border:1px solid #ddd;border-radius:10px;padding:12px 6px;
+   font-size:13px;cursor:pointer;color:var(--bg);font-weight:600;}
+.st img{width:56px;height:56px;object-fit:contain;border-radius:8px;}
 .st:active{background:var(--ac);color:#fff;}
-.stop{background:var(--ko);color:#fff;border:0;justify-content:center;}
+.stop{background:var(--ko);color:#fff;border:0;justify-content:center;width:100%;font-size:16px;}
 .np{background:var(--ac);color:#fff;padding:12px;border-radius:10px;font-weight:600;margin-bottom:14px;}
 .np.off{background:#999;}
+.volrow{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #e0e0e0;
+   border-radius:10px;padding:10px 12px;margin-bottom:8px;}
+.vollab{width:64px;font-weight:700;color:var(--bg);font-size:13px;}
+.volrow input[type=range]{flex:1;}
+.volval{width:66px;text-align:right;font-size:13px;color:var(--bg);font-weight:600;}
 .tuberow{display:flex;gap:8px;}
 .tubebtn{flex:1;text-align:center;background:#fff;border:2px solid #ddd;
    border-radius:10px;padding:12px 4px;font-size:15px;cursor:pointer;
@@ -196,12 +259,22 @@ iframe{border:0;width:100%;height:100%;background:#fff;}
 <div id="p0" class="tab active">
   <div class="hw" id="hw"></div>
   <div id="services"></div>
-  <div class="tubeinfo" id="tubeinfo">Emulation lampes</div>
+  <div class="volrow"><span class="vollab">DAC</span>
+    <input type="range" id="vdac" min="-60" max="0" step="0.5"
+      oninput="vshow('vdac',this.value)" onchange="vset('dac',this.value)">
+    <span class="volval" id="vdacv">&ndash;</span></div>
+  <div class="volrow"><span class="vollab">Camilla</span>
+    <input type="range" id="vcdsp" min="-40" max="0" step="0.5"
+      oninput="vshow('vcdsp',this.value)" onchange="vset('cdsp',this.value)">
+    <span class="volval" id="vcdspv">&ndash;</span></div>
+  <div class="volrow"><span class="vollab">Qobuz</span>
+    <span style="flex:1;font-size:12px;color:#888;">pilot&#233; depuis l'app</span>
+    <span class="volval" id="vqobuzv">&ndash;</span></div>
   <div class="tuberow">
-    <button class="tubebtn" id="tube0" onclick="setTube('0')">Off</button>
-    <button class="tubebtn" id="tube1" onclick="setTube('1')">L&#233;ger</button>
-    <button class="tubebtn" id="tube2" onclick="setTube('2')">Moyen</button>
-    <button class="tubebtn" id="tube3" onclick="setTube('3')">Fort</button>
+    <button class="tubebtn" id="tube0" onclick="setTube('0')">Lampes Off</button>
+    <button class="tubebtn" id="tube3" onclick="setTube('3')">Lampes On</button>
+    <button class="tubebtn" id="loud0" onclick="setLoud(0)">Loudness Off</button>
+    <button class="tubebtn" id="loud1" onclick="setLoud(1)">Loudness On</button>
   </div>
 </div>
 
@@ -259,21 +332,34 @@ async function refresh(){
     if(s.now_playing){np.className='np';np.textContent='\\u25b6 '+s.now_playing;}
     else{np.className='np off';np.textContent='arr\\u00eat\\u00e9';}
     // lampes : marquer le niveau actif
-    for(const n of ['0','1','2','3']){
+    for(const n of ['0','3']){
       document.getElementById('tube'+n).classList.toggle('sel', s.tube===n);
     }
-    document.getElementById('tubeinfo').textContent='Emulation lampes : '+TUBELABELS[s.tube||'0'];
+    document.getElementById('loud0').classList.toggle('sel', !s.loud);
+    document.getElementById('loud1').classList.toggle('sel', !!s.loud);
+    if(s.vol){vmaj('vdac',s.vol.dac);vmaj('vcdsp',s.vol.cdsp);
+      document.getElementById('vqobuzv').textContent=(s.vol.qobuz==null?'\u2013':s.vol.qobuz+'%');}
   }catch(e){}
 }
+function vshow(id,v){document.getElementById(id+'v').textContent=Number(v).toFixed(1)+' dB';}
+function vmaj(id,v){if(v==null)return;const e=document.getElementById(id);
+  if(document.activeElement!==e)e.value=v; vshow(id,v);}
+async function vset(t,v){await fetch('/vol?t='+t+'&db='+v);}
 async function act(n){await fetch('/action?svc='+n);setTimeout(refresh,1500);}
 async function rplay(u){await fetch('/play?url='+encodeURIComponent(u));setTimeout(refresh,1500);}
 async function rstop(){await fetch('/stop');setTimeout(refresh,1500);}
+async function setLoud(v){await fetch('/loud?on='+v);setTimeout(refresh,800);}
 async function setTube(l){
-  document.getElementById('tubeinfo').textContent='Application en cours...';
   await fetch('/tube?level='+l);setTimeout(refresh,3000);
 }
 stationsHtml();refresh();setInterval(refresh,5000);
 </script></body></html>"""
+
+
+ICON_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<rect width="512" height="512" fill="#16324F"/>
+<path d="M256 112c-70 0-128 56-128 126v66a24 24 0 0 0 24 24h28a20 20 0 0 0 20-20v-72a20 20 0 0 0-20-20h-28v22c0-57 46-104 104-104s104 47 104 104v-22h-28a20 20 0 0 0-20 20v72a20 20 0 0 0 20 20h28a24 24 0 0 0 24-24v-66c0-70-58-126-128-126z" fill="#2A9D8F"/>
+</svg>"""
 
 
 class H(BaseHTTPRequestHandler):
@@ -284,6 +370,21 @@ class H(BaseHTTPRequestHandler):
             self._send(200, "application/json", status_json().encode())
         elif u.path == "/action":
             do_action(q.get("svc", [""])[0])
+            self._send(200, "text/plain", b"ok")
+        elif u.path == "/loud":
+            set_loud(q.get("on", ["0"])[0] == "1")
+            self._send(200, "text/plain", b"ok")
+        elif u.path == "/vol":
+            t = q.get("t", [""])[0]
+            try:
+                db = float(q.get("db", ["0"])[0])
+            except ValueError:
+                db = None
+            if db is not None and -80 <= db <= 0:
+                if t == "dac":
+                    dac_volume(db)
+                elif t == "cdsp":
+                    cdsp_volume(db)
             self._send(200, "text/plain", b"ok")
         elif u.path == "/tube":
             set_tube(q.get("level", ["0"])[0])
@@ -298,8 +399,11 @@ class H(BaseHTTPRequestHandler):
             mf = _j.dumps({"name": "Chaine audio", "short_name": "Audio",
                            "start_url": "/", "display": "fullscreen",
                            "background_color": "#f4f7f7", "theme_color": "#16324F",
-                           "icons": []})
+                           "icons": [{"src": "/icon.svg", "sizes": "any",
+                                      "type": "image/svg+xml", "purpose": "any maskable"}]})
             self._send(200, "application/manifest+json", mf.encode())
+        elif u.path == "/icon.svg":
+            self._send(200, "image/svg+xml", ICON_SVG.encode())
         elif u.path == "/logo":
             sid = q.get("id", [""])[0]
             path = os.path.join(LOGO_DIR, sid + ".png")

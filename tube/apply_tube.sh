@@ -5,7 +5,7 @@ LEVEL=${1:-0}
 CFG=~/camilladsp/configs
 SCRIPT=~/tube/make_tube_config.py
 
-for src in qobuz bluetooth; do
+for src in qobuz bluetooth fichiers; do
     f="$CFG/camilladsp-$src.yml"
     # backup une seule fois (garde l'original propre)
     [ -f "$f.avant-tube" ] || cp "$f" "$f.avant-tube"
@@ -20,3 +20,4 @@ for src in qobuz bluetooth; do
     fi
 done
 echo "$LEVEL" > /home/rulio12/tube/tube.level
+cp "$CFG/camilladsp-qobuz.yml" "$CFG/camilladsp.yml"

@@ -1,0 +1,13 @@
+[Unit]
+Description=Loudness automatique selon le niveau global
+After=camilladsp.service
+
+[Service]
+Type=simple
+User=rulio12
+ExecStart=/home/rulio12/audio-power/venv/bin/python /home/rulio12/loudness/loudness.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

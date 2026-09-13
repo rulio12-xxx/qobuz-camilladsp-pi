@@ -266,6 +266,20 @@ filters:
       freq: 7501.0
       gain: -5.2
       q: 1.821
+  loud_bass:
+    type: Biquad
+    parameters:
+      type: Lowshelf
+      freq: 120
+      gain: 0.0
+      slope: 6.0
+  loud_treble:
+    type: Biquad
+    parameters:
+      type: Highshelf
+      freq: 8000
+      gain: 0.0
+      slope: 6.0
 pipeline:
   - type: Filter
     channels: [0]
@@ -289,6 +303,8 @@ pipeline:
       - filterL_16
       - balance_L
       - delay_L
+      - loud_bass
+      - loud_treble
       - limiter
   - type: Filter
     channels: [1]
@@ -310,6 +326,8 @@ pipeline:
       - filterR_12
       - kick
       - delay_R
+      - loud_bass
+      - loud_treble
       - limiter
 
 

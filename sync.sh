@@ -45,3 +45,8 @@ cp ~/spdifin.dts                                  systemd/ 2>/dev/null
 cp /etc/systemd/system/mympd.service              systemd/ 2>/dev/null
 cp /etc/systemd/system/qobuz-wake.service         systemd/ 2>/dev/null
 cp ~/qobuz-proxy/config.yaml                      config/qobuz-proxy-config.yaml 2>/dev/null
+mkdir -p loudness tube radio/logos
+cp ~/loudness/loudness.py                    loudness/ 2>/dev/null
+cp /etc/systemd/system/loudness.service      systemd/ 2>/dev/null
+cp ~/radio/logos.sh                          radio/ 2>/dev/null
+cp ~/radio/logos/*.png                       radio/logos/ 2>/dev/null

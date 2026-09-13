@@ -35,6 +35,7 @@ QOBUZ_TRIGGER = "Renderer set active: True"
 WAKE_DEVICES = [
     ("Qobuz",     "hw:10,1", "/proc/asound/card10/pcm0p/sub0/hw_params"),
     ("Bluetooth", "hw:11,1", "/proc/asound/card11/pcm0p/sub0/hw_params"),
+    ("Fichiers",  "hw:10,1,1", "/proc/asound/card10/pcm0p/sub1/hw_params"),
     # ("Spdif",   "hw:3,0",  "/proc/asound/card3/pcm0c/sub0/hw_params"),
 ]
 

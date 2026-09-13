@@ -34,14 +34,12 @@ CFG_DIR = "/home/rulio12/camilladsp/configs"
 CONFIG = {
     "Qobuz":     f"{CFG_DIR}/camilladsp-qobuz.yml",
     "Bluetooth": f"{CFG_DIR}/camilladsp-bluetooth.yml",
-    "Fichiers":  f"{CFG_DIR}/camilladsp-fichiers.yml",
 }
 
 CAMILLA_HOST, CAMILLA_PORT = "127.0.0.1", 1234
 
 # Detection Qobuz : cote 'playback' du loopback 10
 QOBUZ_STATUS = "/proc/asound/Loopback/pcm0p/sub0/status"
-MPD_STATUS = "/proc/asound/Loopback/pcm0p/sub1/status"
 
 T_ACTIVE, T_SILENCE = 2.0, 5.0
 T_QUARANTINE, POLL = 30.0, 0.5
@@ -167,17 +165,6 @@ class QobuzSource(Source):
         return "state: RUNNING" in txt
 
 
-class MpdSource(Source):
-    """MPD : fichiers locaux et radios, sous-flux 1 du loopback."""
-
-    def raw_active(self):
-        try:
-            txt = open(MPD_STATUS).read()
-        except FileNotFoundError:
-            return False
-        return "state: RUNNING" in txt
-
-
 class BluetoothSource(Source):
     """Actif des qu'un appareil A2DP quelconque emet (Running: true)."""
 
@@ -242,8 +229,7 @@ def main():
     qobuz = QobuzSource("Qobuz", priority=0)
     bt = BluetoothSource("Bluetooth", priority=4)
 
-    fichiers = MpdSource("Fichiers", priority=-1)
-    sources = [fichiers, qobuz]
+    sources = [qobuz]
     if ENABLE_SPDIF:
         sources += [
             SpdifSource("Optique", priority=1, rxsel=0),
