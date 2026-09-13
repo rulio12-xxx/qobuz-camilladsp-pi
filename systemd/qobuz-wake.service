@@ -1,0 +1,13 @@
+[Unit]
+Description=Reveil anticipe du DAC sur connexion Qobuz
+After=qobuz-proxy.service
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/bin/python3 /home/rulio12/audio-power/qobuz-wake.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

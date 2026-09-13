@@ -1,0 +1,12 @@
+server:
+  http_port: 8689
+  bind_address: 0.0.0.0
+logging:
+  level: info
+speakers:
+- name: Camilla DSP Pi
+  backend: local
+  max_quality: 6
+  audio_device: 'Loopback: PCM (hw:10,0)'
+  audio_buffer_size: 1024
+  dlna_fixed_volume: true

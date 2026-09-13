@@ -143,7 +143,10 @@ def radio_stop():
 
 PAGE = """<!DOCTYPE html><html lang="fr"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Chaine audio</title><style>
+<title>Chaine audio</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#16324F">
+<meta name="mobile-web-app-capable" content="yes"><style>
 :root{--bg:#16324F;--ac:#2A9D8F;--ko:#C62828;--warn:#E9A03B;}
 *{box-sizing:border-box;margin:0;font-family:system-ui,sans-serif;}
 body{background:#f4f7f7;height:100vh;display:flex;flex-direction:column;}
@@ -174,18 +177,18 @@ iframe{border:0;width:100%;height:100%;background:#fff;}
 .stop{background:var(--ko);color:#fff;border:0;justify-content:center;}
 .np{background:var(--ac);color:#fff;padding:12px;border-radius:10px;font-weight:600;margin-bottom:14px;}
 .np.off{background:#999;}
-.tubebtn{display:block;width:100%;text-align:center;background:#fff;border:2px solid #ddd;
-   border-radius:10px;padding:18px;font-size:18px;margin-bottom:12px;cursor:pointer;
+.tuberow{display:flex;gap:8px;}
+.tubebtn{flex:1;text-align:center;background:#fff;border:2px solid #ddd;
+   border-radius:10px;padding:12px 4px;font-size:15px;cursor:pointer;
    color:var(--bg);font-weight:700;}
 .tubebtn.sel{background:var(--ac);color:#fff;border-color:var(--ac);}
 .tubeinfo{background:var(--bg);color:#fff;padding:12px;border-radius:10px;margin-bottom:16px;
    font-weight:600;text-align:center;}
 </style></head><body>
-<header>&#127911; Chaine audio &mdash; CamillaDSP Pi</header>
 <nav>
   <button id="t0" class="active" onclick="tab(0)">Statuts</button>
   <button id="t1" onclick="tab(1)">Radios</button>
-  <button id="t4" onclick="tab(4)">Lampes</button>
+  <button id="t5" onclick="tab(5)">Musique</button>
   <button id="t2" onclick="tab(2)">CamillaGUI</button>
   <button id="t3" onclick="tab(3)">Qobuz</button>
 </nav>
@@ -193,6 +196,13 @@ iframe{border:0;width:100%;height:100%;background:#fff;}
 <div id="p0" class="tab active">
   <div class="hw" id="hw"></div>
   <div id="services"></div>
+  <div class="tubeinfo" id="tubeinfo">Emulation lampes</div>
+  <div class="tuberow">
+    <button class="tubebtn" id="tube0" onclick="setTube('0')">Off</button>
+    <button class="tubebtn" id="tube1" onclick="setTube('1')">L&#233;ger</button>
+    <button class="tubebtn" id="tube2" onclick="setTube('2')">Moyen</button>
+    <button class="tubebtn" id="tube3" onclick="setTube('3')">Fort</button>
+  </div>
 </div>
 
 <div id="p1" class="tab">
@@ -201,15 +211,7 @@ iframe{border:0;width:100%;height:100%;background:#fff;}
   <button class="st stop" onclick="rstop()">&#9632; Arr&#234;ter (revenir &#224; Qobuz)</button>
 </div>
 
-<div id="p4" class="tab">
-  <div class="tubeinfo" id="tubeinfo">Emulation lampes</div>
-  <button class="tubebtn" id="tube0" onclick="setTube('0')">Off &mdash; son pur</button>
-  <button class="tubebtn" id="tube1" onclick="setTube('1')">L&#233;ger</button>
-  <button class="tubebtn" id="tube2" onclick="setTube('2')">Moyen</button>
-  <button class="tubebtn" id="tube3" onclick="setTube('3')">Fort</button>
-  <p style="color:#888;font-size:13px;margin-top:8px;">Le changement recharge CamillaDSP (br&#232;ve coupure). S'applique &#224; toutes les sources.</p>
-</div>
-
+<div id="p5" class="tab frame"><iframe id="if5"></iframe></div>
 <div id="p2" class="tab frame"><iframe id="if2"></iframe></div>
 <div id="p3" class="tab frame"><iframe id="if3"></iframe></div>
 
@@ -217,14 +219,15 @@ iframe{border:0;width:100%;height:100%;background:#fff;}
 const H=location.hostname;
 const STATIONS=__STATIONS__;
 const TUBELABELS={"0":"Off","1":"L\\u00e9ger","2":"Moyen","3":"Fort"};
-let framesLoaded={2:false,3:false};
+let framesLoaded={2:false,3:false,5:false};
 function tab(i){
-  for(const n of [0,1,2,3,4]){
+  for(const n of [0,1,2,3,5]){
     document.getElementById('t'+n).classList.toggle('active',n===i);
     document.getElementById('p'+n).classList.toggle('active',n===i);
   }
   if(i===2&&!framesLoaded[2]){document.getElementById('if2').src='http://'+H+':5005';framesLoaded[2]=true;}
   if(i===3&&!framesLoaded[3]){document.getElementById('if3').src='http://'+H+':8689';framesLoaded[3]=true;}
+  if(i===5&&!framesLoaded[5]){document.getElementById('if5').src='http://'+H+':8082';framesLoaded[5]=true;}
 }
 function stationsHtml(){
   let h='';
@@ -290,6 +293,13 @@ class H(BaseHTTPRequestHandler):
             self._send(200, "text/plain", b"ok")
         elif u.path == "/stop":
             radio_stop(); self._send(200, "text/plain", b"ok")
+        elif u.path == "/manifest.json":
+            import json as _j
+            mf = _j.dumps({"name": "Chaine audio", "short_name": "Audio",
+                           "start_url": "/", "display": "fullscreen",
+                           "background_color": "#f4f7f7", "theme_color": "#16324F",
+                           "icons": []})
+            self._send(200, "application/manifest+json", mf.encode())
         elif u.path == "/logo":
             sid = q.get("id", [""])[0]
             path = os.path.join(LOGO_DIR, sid + ".png")

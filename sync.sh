@@ -41,3 +41,7 @@ cp /etc/systemd/system/mpd.service                systemd/ 2>/dev/null
 cp /etc/mpd.conf                                  radio/mpd-system.conf 2>/dev/null
 
 git status --short
+cp ~/spdifin.dts                                  systemd/ 2>/dev/null
+cp /etc/systemd/system/mympd.service              systemd/ 2>/dev/null
+cp /etc/systemd/system/qobuz-wake.service         systemd/ 2>/dev/null
+cp ~/qobuz-proxy/config.yaml                      config/qobuz-proxy-config.yaml 2>/dev/null
