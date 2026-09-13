@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """Centre de controle de la chaine audio — page unique a onglets.
-Onglets : Statuts / Radios / Lampes / CamillaGUI / Qobuz.
-Sert sur le port 8080.
+
+Onglets : Statuts (pastilles, services, volumes DAC/Camilla, lampes,
+loudness) / Radios (grille + logos) / Musique (myMPD) / CamillaGUI /
+Qobuz. Installable en PWA plein ecran. Sert sur le port 8080.
 """
 
 import os

@@ -4,7 +4,7 @@
 audiohub-selector : demon de selection de source pour AudioHub DSP V1
 
 Priorite STRICTE :
-    Qobuz > Optique > Coax1 > Coax2 (phono) > Bluetooth
+    Fichiers (MPD) > Qobuz > Optique > Coax1 > Coax2 (phono) > Bluetooth
 
 ARCHITECTURE (v2 : un loopback par source)
     qobuz-proxy      -> hw:10,0   (carte 10)   CamillaDSP capture hw:10,1

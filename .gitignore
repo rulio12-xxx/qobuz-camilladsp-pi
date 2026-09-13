@@ -14,3 +14,4 @@ qobuz-proxy/
 logos/
 venv/
 **/*password*
+*.avant-*
