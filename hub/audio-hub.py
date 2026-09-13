@@ -93,15 +93,19 @@ def status_json():
     services = {s: ("active" if svc_active(s) else "inactive") for s in SERVICES}
     dac = os.path.exists(f"/sys/bus/usb/devices/{USB_DEV}")
     loopback, rate = False, None
-    try:
-        txt = open(HWPARAMS).read()
+    import re
+    for hwp in ("/proc/asound/card10/pcm0p/sub0/hw_params",
+                "/proc/asound/card10/pcm0p/sub1/hw_params",
+                "/proc/asound/card11/pcm0p/sub0/hw_params"):
+        try:
+            txt = open(hwp).read()
+        except OSError:
+            continue
         if "closed" not in txt:
             loopback = True
-            import re
             m = re.search(r"rate:\s*(\d+)", txt)
             rate = int(m.group(1)) if m else None
-    except OSError:
-        pass
+            break
     np = None
     try:
         if "playing" in mpc("status"):
@@ -242,7 +246,7 @@ iframe{border:0;width:100%;height:100%;background:#fff;}
 .vollab{width:64px;font-weight:700;color:var(--bg);font-size:13px;}
 .volrow input[type=range]{flex:1;}
 .volval{width:66px;text-align:right;font-size:13px;color:var(--bg);font-weight:600;}
-.tuberow{display:flex;gap:8px;}
+.tuberow{display:flex;gap:8px;margin-top:20px;}
 .tubebtn{flex:1;text-align:center;background:#fff;border:2px solid #ddd;
    border-radius:10px;padding:12px 4px;font-size:15px;cursor:pointer;
    color:var(--bg);font-weight:700;}
@@ -260,7 +264,6 @@ iframe{border:0;width:100%;height:100%;background:#fff;}
 
 <div id="p0" class="tab active">
   <div class="hw" id="hw"></div>
-  <div id="services"></div>
   <div class="volrow"><span class="vollab">DAC</span>
     <input type="range" id="vdac" min="-60" max="0" step="0.5"
       oninput="vshow('vdac',this.value)" onchange="vset('dac',this.value)">
@@ -278,6 +281,7 @@ iframe{border:0;width:100%;height:100%;background:#fff;}
     <button class="tubebtn" id="loud0" onclick="setLoud(0)">Loudness Off</button>
     <button class="tubebtn" id="loud1" onclick="setLoud(1)">Loudness On</button>
   </div>
+  <div id="services" style="margin-top:20px;"></div>
 </div>
 
 <div id="p1" class="tab">
@@ -318,7 +322,7 @@ async function refresh(){
     const s=await (await fetch('/status')).json();
     let hw='';
     hw+='<span class="pill '+(s.dac?'ok':'warn')+'"><span class="dot"></span>DAC '+(s.dac?'pr\\u00e9sent':'veille')+'</span>';
-    hw+='<span class="pill '+(s.loopback?'ok':'warn')+'"><span class="dot"></span>flux '+(s.loopback?(s.rate+' Hz'):'inactif')+'</span>';
+    hw+='<span class="pill '+(s.loopback?'ok':'warn')+'"><span class="dot"></span>Flux '+(s.loopback?(s.rate+' Hz'):'inactif')+'</span>';
     if(s.bluetooth){var bt=s.bluetooth;hw+='<span class="pill '+(bt.playing?'ok':'warn')+'"><span class="dot"></span>'+(bt.playing?'\\u25b6 BT: ':'BT: ')+bt.name+(bt.playing?'':' (connect\\u00e9)')+'</span>';}
     if(s.tube&&s.tube!=='0'){hw+='<span class="pill ok"><span class="dot"></span>Lampes: '+TUBELABELS[s.tube]+'</span>';}
     document.getElementById('hw').innerHTML=hw;

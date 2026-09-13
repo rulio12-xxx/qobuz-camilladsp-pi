@@ -1,0 +1,6 @@
+[Unit]
+Description=Verifie que audiohub-selector tourne, le relance sinon
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash -c 'systemctl is-active --quiet audiohub-selector || systemctl restart audiohub-selector'

@@ -8,7 +8,7 @@ import sys, re
 LEVELS = {
     1: {"threshold": -18, "factor": 1.3, "clip_limit": -3.0, "makeup_gain": 0.5},
     2: {"threshold": -24, "factor": 1.6, "clip_limit": -1.5, "makeup_gain": 1.0},
-    3: {"threshold": -30, "factor": 2.0, "clip_limit": -0.8, "makeup_gain": 1.5},
+    3: {"threshold": -22, "factor": 3.0, "clip_limit": -0.3, "makeup_gain": 2.0},
 }
 
 def main():
