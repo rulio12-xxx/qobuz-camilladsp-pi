@@ -191,8 +191,6 @@ def main():
                     subprocess.run(["systemctl", "stop", "camilladsp"])
                     time.sleep(2)
                     usb_power5V(False)
-                    subprocess.run(["systemctl", "restart", "qobuz-proxy"])
-                    log("qobuz-proxy redemarre (etat frais)")
                     state = "off"
                     paused_since = None
                     _qobuz_connect.clear()
