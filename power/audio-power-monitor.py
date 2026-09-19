@@ -30,7 +30,7 @@ CDSP_HOST, CDSP_PORT = "127.0.0.1", 1234
 POLL_ON = 5
 WAKE_THRESHOLD = 1e-4
 HWPARAMS = "/proc/asound/card10/pcm0p/sub0/hw_params"
-QOBUZ_TRIGGER = "Renderer set active: True"
+QOBUZ_TRIGGER = ("/streamcore/get-display-info", "/streamcore/get-connect-info")
 
 WAKE_DEVICES = [
     ("Qobuz",     "hw:10,1", "/proc/asound/card10/pcm0p/sub0/hw_params"),
@@ -116,7 +116,7 @@ def qobuz_log_watcher():
                 ["journalctl", "-u", "qobuz-proxy", "-f", "-n", "0", "-o", "cat"],
                 stdout=subprocess.PIPE, text=True)
             for line in p.stdout:
-                if QOBUZ_TRIGGER in line:
+                if any(t in line for t in QOBUZ_TRIGGER):
                     log("Connexion Qobuz detectee (reveil anticipe)")
                     _qobuz_connect.set()
         except Exception as e:
