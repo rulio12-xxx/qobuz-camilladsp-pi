@@ -52,3 +52,4 @@ cp ~/radio/logos.sh                          radio/ 2>/dev/null
 cp ~/radio/logos/*.png                       radio/logos/ 2>/dev/null
 cp /etc/systemd/system/selector-watchdog.service systemd/ 2>/dev/null
 cp /etc/systemd/system/selector-watchdog.timer   systemd/ 2>/dev/null
+cp /etc/sudoers.d/audio-hub systemd/sudoers-audio-hub 2>/dev/null

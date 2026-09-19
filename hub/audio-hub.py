@@ -18,7 +18,7 @@ HWPARAMS = "/proc/asound/card10/pcm0p/sub0/hw_params"
 TUBE_LEVEL_FILE = "/home/rulio12/tube/tube.level"
 APPLY_TUBE = "/home/rulio12/tube/apply_tube.sh"
 
-SERVICES = ["camilladsp", "qobuz-proxy", "audio-power", "camillagui", "mpd"]
+SERVICES = ["camilladsp", "audiohub-selector", "qobuz-proxy", "audio-power", "camillagui", "mpd"]
 
 STATIONS = [
     ("franceinter",   "France Inter",   "http://icecast.radiofrance.fr/franceinter-hifi.aac"),
@@ -32,7 +32,7 @@ STATIONS = [
     ("bfm",           "BFM",            "http://audio.bfmtv.com/rmcradio_128.mp3"),
 ]
 
-RESTARTABLE = {"camilladsp", "qobuz-proxy", "audio-power", "camillagui", "radio"}
+RESTARTABLE = {"camilladsp", "audiohub-selector", "qobuz-proxy", "audio-power", "camillagui", "radio"}
 
 TUBE_LABELS = {"0": "Off", "1": "Leger", "2": "Moyen", "3": "Fort"}
 
