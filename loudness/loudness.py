@@ -19,7 +19,7 @@ import time
 
 from camilladsp import CamillaClient
 
-REF_DB = -17.5          # niveau global de reference (compensation nulle)
+REF_DB = -17.0          # niveau global de reference (compensation nulle) - seuil choisi par l'utilisateur le 23/09 : le loudness ne doit s'appliquer qu'en dessous de -17dB
 BASS_STEP = 4.0         # dB de baisse pour +1 dB de grave
 BASS_MAX = 8.0          # compensation grave maximale
 TREBLE_RATIO = 0.5      # l'aigu suit le grave, a moitie

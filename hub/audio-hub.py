@@ -189,6 +189,22 @@ def set_loud(on):
         os.remove(LOUD_FLAG)
 
 
+CRITICAL_SERVICES = ["camilladsp", "audiohub-selector", "qobuz-proxy"]
+
+
+def force_qobuz():
+    """Redemarre les services critiques morts et coupe Fichiers/radio,
+    pour laisser la priorite stricte du selecteur basculer sur Qobuz."""
+    restarted = []
+    for name in CRITICAL_SERVICES:
+        if not svc_active(name):
+            subprocess.run(["sudo", "systemctl", "restart", name])
+            restarted.append(name)
+    mpc("clear")
+    mpc("stop")
+    return restarted
+
+
 def do_action(name):
     if name in RESTARTABLE:
         subprocess.run(["sudo", "systemctl", "restart", name])
@@ -400,6 +416,10 @@ class H(BaseHTTPRequestHandler):
             self._send(200, "text/plain", b"ok")
         elif u.path == "/stop":
             radio_stop(); self._send(200, "text/plain", b"ok")
+        elif u.path == "/qobuz-force":
+            import json as _j
+            restarted = force_qobuz()
+            self._send(200, "application/json", _j.dumps({"restarted": restarted}).encode())
         elif u.path == "/manifest.json":
             import json as _j
             mf = _j.dumps({"name": "Chaine audio", "short_name": "Audio",
