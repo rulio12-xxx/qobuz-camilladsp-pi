@@ -3,6 +3,7 @@ cd ~/audiohub || exit 1
 
 cp ~/camilladsp/configs/camilladsp-qobuz.yml     camilladsp/
 cp ~/camilladsp/configs/camilladsp-bluetooth.yml camilladsp/
+cp ~/camilladsp/configs/camilladsp-fichiers.yml camilladsp/
 cp ~/camilladsp/configs/camilladsp.yml           camilladsp/
 
 cp ~/audio-power/audio-power-monitor.py power/

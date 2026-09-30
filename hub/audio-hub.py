@@ -126,6 +126,7 @@ def status_json():
                        "rate": rate, "now_playing": np,
                        "bluetooth": bluetooth_status(), "tube": tube_level(),
                        "loud": loud_enabled(),
+                       "kickbody": kickbody_enabled(),
                        "vol": vol})
 
 
@@ -187,6 +188,29 @@ def set_loud(on):
         open(LOUD_FLAG, "w").close()
     elif os.path.exists(LOUD_FLAG):
         os.remove(LOUD_FLAG)
+
+
+KICKBODY_FLAG = "/home/rulio12/kickbody/enabled"
+KICKBODY_GAIN = 1.5
+
+
+def kickbody_enabled():
+    return os.path.exists(KICKBODY_FLAG)
+
+
+def set_kickbody(on):
+    os.makedirs(os.path.dirname(KICKBODY_FLAG), exist_ok=True)
+    if on:
+        open(KICKBODY_FLAG, "w").close()
+    elif os.path.exists(KICKBODY_FLAG):
+        os.remove(KICKBODY_FLAG)
+    gain = KICKBODY_GAIN if on else 0.0
+    code = ("from camilladsp import CamillaClient\n"
+            "c = CamillaClient('127.0.0.1', 1234)\n"
+            "c.connect()\n"
+            f"c.config.set_value('/filters/kick_body_L/parameters/gain', {gain})\n"
+            f"c.config.set_value('/filters/kick_body_R/parameters/gain', {gain})\n")
+    subprocess.run([VENV_PY, "-c", code], capture_output=True, timeout=5)
 
 
 CRITICAL_SERVICES = ["camilladsp", "audiohub-selector", "qobuz-proxy"]
@@ -292,10 +316,9 @@ iframe{border:0;width:100%;height:100%;background:#fff;}
     <span style="flex:1;font-size:12px;color:#888;">pilot&#233; depuis l'app</span>
     <span class="volval" id="vqobuzv">&ndash;</span></div>
   <div class="tuberow">
-    <button class="tubebtn" id="tube0" onclick="setTube('0')">Lampes Off</button>
-    <button class="tubebtn" id="tube3" onclick="setTube('3')">Lampes On</button>
-    <button class="tubebtn" id="loud0" onclick="setLoud(0)">Loudness Off</button>
-    <button class="tubebtn" id="loud1" onclick="setLoud(1)">Loudness On</button>
+    <button class="tubebtn" id="tubeToggle" onclick="toggleTube()">Lampes</button>
+    <button class="tubebtn" id="loudToggle" onclick="toggleLoud()">Loudness</button>
+    <button class="tubebtn" id="kbToggle" onclick="toggleKickbody()">Kick</button>
   </div>
   <div id="services" style="margin-top:20px;"></div>
 </div>
@@ -333,9 +356,11 @@ function stationsHtml(){
   }
   document.getElementById('stations').innerHTML=h;
 }
+let lastStatus=null;
 async function refresh(){
   try{
     const s=await (await fetch('/status')).json();
+    lastStatus=s;
     let hw='';
     hw+='<span class="pill '+(s.dac?'ok':'warn')+'"><span class="dot"></span>DAC '+(s.dac?'pr\\u00e9sent':'veille')+'</span>';
     hw+='<span class="pill '+(s.loopback?'ok':'warn')+'"><span class="dot"></span>Flux '+(s.loopback?(s.rate+' Hz'):'inactif')+'</span>';
@@ -354,11 +379,13 @@ async function refresh(){
     if(s.now_playing){np.className='np';np.textContent='\\u25b6 '+s.now_playing;}
     else{np.className='np off';np.textContent='arr\\u00eat\\u00e9';}
     // lampes : marquer le niveau actif
-    for(const n of ['0','3']){
-      document.getElementById('tube'+n).classList.toggle('sel', s.tube===n);
-    }
-    document.getElementById('loud0').classList.toggle('sel', !s.loud);
-    document.getElementById('loud1').classList.toggle('sel', !!s.loud);
+    const tubeOn=!!s.tube&&s.tube!=='0';
+    document.getElementById('tubeToggle').classList.toggle('sel', tubeOn);
+    document.getElementById('tubeToggle').textContent='Lampes '+(tubeOn?'On':'Off');
+    document.getElementById('loudToggle').classList.toggle('sel', !!s.loud);
+    document.getElementById('loudToggle').textContent='Loudness '+(s.loud?'On':'Off');
+    document.getElementById('kbToggle').classList.toggle('sel', !!s.kickbody);
+    document.getElementById('kbToggle').textContent='Kick '+(s.kickbody?'On':'Off');
     if(s.vol){vmaj('vdac',s.vol.dac);vmaj('vcdsp',s.vol.cdsp);
       document.getElementById('vqobuzv').textContent=(s.vol.qobuz==null?'\u2013':s.vol.qobuz+'%');}
   }catch(e){}
@@ -371,6 +398,19 @@ async function act(n){await fetch('/action?svc='+n);setTimeout(refresh,1500);}
 async function rplay(u){await fetch('/play?url='+encodeURIComponent(u));setTimeout(refresh,1500);}
 async function rstop(){await fetch('/stop');setTimeout(refresh,1500);}
 async function setLoud(v){await fetch('/loud?on='+v);setTimeout(refresh,800);}
+async function setKickbody(v){await fetch('/kickbody?on='+v);setTimeout(refresh,800);}
+function toggleTube(){
+  if(!lastStatus)return;
+  setTube(lastStatus.tube&&lastStatus.tube!=='0'?'0':'3');
+}
+function toggleLoud(){
+  if(!lastStatus)return;
+  setLoud(lastStatus.loud?0:1);
+}
+function toggleKickbody(){
+  if(!lastStatus)return;
+  setKickbody(lastStatus.kickbody?0:1);
+}
 async function setTube(l){
   await fetch('/tube?level='+l);setTimeout(refresh,3000);
 }
@@ -395,6 +435,9 @@ class H(BaseHTTPRequestHandler):
             self._send(200, "text/plain", b"ok")
         elif u.path == "/loud":
             set_loud(q.get("on", ["0"])[0] == "1")
+            self._send(200, "text/plain", b"ok")
+        elif u.path == "/kickbody":
+            set_kickbody(q.get("on", ["0"])[0] == "1")
             self._send(200, "text/plain", b"ok")
         elif u.path == "/vol":
             t = q.get("t", [""])[0]

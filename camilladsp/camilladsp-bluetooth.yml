@@ -21,6 +21,20 @@ devices:
     format: S32_LE
 
 filters:
+  kick_body_L:
+    type: Biquad
+    parameters:
+      type: Peaking
+      freq: 80
+      gain: 1.5
+      q: 4.0
+  kick_body_R:
+    type: Biquad
+    parameters:
+      type: Peaking
+      freq: 80
+      gain: 1.5
+      q: 4.0
   click_boost:
     type: Biquad
     parameters:
@@ -314,6 +328,7 @@ pipeline:
     names:
       - preamp
       - mode50_cut_L
+      - kick_body_L
       - click_boost
       - filterL_1
       - filterL_2
@@ -341,6 +356,7 @@ pipeline:
       - preamp
       - kick_fill_R
       - mode50_cut_R
+      - kick_body_R
       - click_boost
       - filterR_0
       - filterR_01
