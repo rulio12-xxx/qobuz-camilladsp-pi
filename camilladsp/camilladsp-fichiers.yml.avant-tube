@@ -21,19 +21,26 @@ devices:
     format: S32_LE
 
 filters:
+  click_boost:
+    type: Biquad
+    parameters:
+      type: Peaking
+      freq: 2600
+      gain: 2.0
+      q: 3.0
   mode50_cut_R:
     type: Biquad
     parameters:
       type: Peaking
       freq: 50
-      gain: -12.0
+      gain: -14.0
       q: 5.5
   mode50_cut_L:
     type: Biquad
     parameters:
       type: Peaking
       freq: 50
-      gain: -7.0
+      gain: -9.0
       q: 4.5
   kick_fill_R:
     type: Biquad
@@ -71,7 +78,7 @@ filters:
   preamp:
     type: Gain
     parameters:
-      gain: -21.0
+      gain: -20.5
   limiter:
     type: Limiter
     parameters:
@@ -187,7 +194,7 @@ filters:
     parameters:
       type: Peaking
       freq: 7427.0
-      gain: -2.5
+      gain: -2.0
       q: 2.793
   filterR_0:
     type: Biquad
@@ -285,7 +292,7 @@ filters:
     parameters:
       type: Peaking
       freq: 7501.0
-      gain: -3.0
+      gain: -2.5
       q: 1.821
   loud_bass:
     type: Biquad
@@ -307,6 +314,7 @@ pipeline:
     names:
       - preamp
       - mode50_cut_L
+      - click_boost
       - filterL_1
       - filterL_2
       - filterL_3
@@ -333,6 +341,7 @@ pipeline:
       - preamp
       - kick_fill_R
       - mode50_cut_R
+      - click_boost
       - filterR_0
       - filterR_01
       - filterR_1
