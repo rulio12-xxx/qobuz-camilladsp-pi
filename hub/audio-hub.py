@@ -258,16 +258,16 @@ nav{display:flex;background:#0e2438;flex-wrap:wrap;}
 nav button{flex:1;border:0;padding:12px 4px;font-size:13px;cursor:pointer;
    background:transparent;color:#9fb6c9;min-width:70px;}
 nav button.active{background:#f4f7f7;color:var(--bg);font-weight:700;border-radius:8px 8px 0 0;}
-.tab{display:none;flex:1;overflow:auto;padding:14px;}
+.tab{display:none;flex:1;overflow:hidden;padding:14px;}
 .tab.active{display:block;}
 .tab.frame{padding:0;}
 iframe{border:0;width:100%;height:100%;background:#fff;}
-.card{background:#fff;border:1px solid #e0e0e0;border-radius:10px;padding:12px 14px;margin-bottom:10px;
+.card{background:#fff;border:1px solid #e0e0e0;border-radius:10px;padding:7px 14px;margin-bottom:6px;
    display:flex;align-items:center;gap:12px;}
 .dot{width:11px;height:11px;border-radius:50%;background:#888;flex-shrink:0;}
 .ok .dot{background:var(--ac);}.ko .dot{background:var(--ko);}.warn .dot{background:var(--warn);}
 .card .name{flex:1;font-weight:600;color:var(--bg);}
-.card button{background:var(--bg);color:#fff;border:0;border-radius:8px;padding:8px 14px;
+.card button{background:var(--bg);color:#fff;border:0;border-radius:8px;padding:5px 14px;
    font-size:13px;cursor:pointer;}
 .hw{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;}
 .pill{display:inline-flex;align-items:center;gap:7px;font-size:13px;background:#fff;
