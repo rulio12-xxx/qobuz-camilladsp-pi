@@ -59,6 +59,8 @@ fetch nova      "https://upload.wikimedia.org/wikipedia/commons/5/52/Nova_radio.
                 "https://www.nova.fr/apple-touch-icon.png"
 fetch nostalgie "https://content.sudinfo.be/logotheque/files/dl_logos/dl_logos_otherbrands/logo_nostalgie_color.png" \
                 "https://www.nostalgie.fr/apple-touch-icon.png"
+fetch rireetchansons "https://commons.wikimedia.org/wiki/Special:FilePath/Rire_%26_Chansons_logo_2018.svg?width=256" \
+                "https://www.rireetchansons.fr/apple-touch-icon.png"
 fetch tsfjazz   "https://commons.wikimedia.org/wiki/Special:FilePath/Logo%20TSF%20Jazz.png?width=256" \
                 "https://commons.wikimedia.org/wiki/Special:FilePath/TSF%20Jazz%20logo.svg?width=256" \
                 "https://www.tsfjazz.com/apple-touch-icon.png" \
