@@ -61,6 +61,9 @@ fetch nostalgie "https://content.sudinfo.be/logotheque/files/dl_logos/dl_logos_o
                 "https://www.nostalgie.fr/apple-touch-icon.png"
 fetch rireetchansons "https://commons.wikimedia.org/wiki/Special:FilePath/Rire_%26_Chansons_logo_2018.svg?width=256" \
                 "https://www.rireetchansons.fr/apple-touch-icon.png"
+fetch radio5050 "https://www.radio5050.com/apple-touch-icon.png" \
+                "https://www.radio5050.com/favicon.png" \
+                "https://www.radio5050.com/favicon.ico"
 fetch tsfjazz   "https://commons.wikimedia.org/wiki/Special:FilePath/Logo%20TSF%20Jazz.png?width=256" \
                 "https://commons.wikimedia.org/wiki/Special:FilePath/TSF%20Jazz%20logo.svg?width=256" \
                 "https://www.tsfjazz.com/apple-touch-icon.png" \

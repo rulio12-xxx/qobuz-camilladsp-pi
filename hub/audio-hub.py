@@ -30,6 +30,7 @@ STATIONS = [
     ("franceinfo",    "France Info",    "http://icecast.radiofrance.fr/franceinfo-hifi.aac"),
     ("nostalgie",     "Nostalgie",      "http://cdn.nrjaudio.fm/audio1/fr/30601/mp3_128.mp3"),
     ("rireetchansons", "Rire & Chansons", "http://cdn.nrjaudio.fm/audio1/fr/30401/mp3_128.mp3"),
+    ("radio5050",     "Radio 50/50",    "https://stream.radio5050.com/hls/live.m3u8"),
     ("bfm",           "BFM",            "http://audio.bfmtv.com/rmcradio_128.mp3"),
 ]
 

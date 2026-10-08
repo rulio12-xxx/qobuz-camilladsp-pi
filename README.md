@@ -78,7 +78,7 @@ le niveau d'ecoute, facon Fletcher-Munson.
 | Onglet     | Contenu                                                      |
 |------------|--------------------------------------------------------------|
 | Statuts    | pastilles DAC/flux/BT, services, curseurs volume, lampes, loudness |
-| Radios     | 10 stations en grille avec logos (~/radio/logos)             |
+| Radios     | 11 stations en grille avec logos (~/radio/logos)             |
 | Musique    | myMPD en iframe (port 8082)                                  |
 | CamillaGUI | iframe port 5005                                             |
 | Qobuz      | iframe port 8689                                             |
