@@ -29,7 +29,7 @@ STATIONS = [
     ("nova",          "Radio Nova",     "http://radionova.ice.infomaniak.ch/radionova-256.aac"),
     ("franceinfo",    "France Info",    "http://icecast.radiofrance.fr/franceinfo-hifi.aac"),
     ("nostalgie",     "Nostalgie",      "http://cdn.nrjaudio.fm/audio1/fr/30601/mp3_128.mp3"),
-    ("rireetchansons", "Rire & Chansons", "http://cdn.nrjaudio.fm/audio1/fr/30401/mp3_128.mp3"),
+    ("rireetchansons", "Rire & Chansons", "https://streaming.nrjaudio.fm/ou8o8xgk7oiu"),
     ("radio5050",     "Radio 50/50",    "https://stream.radio5050.com/hls/live.m3u8"),
     ("latina",        "Latina",         "https://start-latina.ice.infomaniak.ch/start-latina-high.aac"),
     ("bfm",           "BFM",            "http://audio.bfmtv.com/rmcradio_128.mp3"),
