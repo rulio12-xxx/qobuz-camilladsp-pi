@@ -21,6 +21,20 @@ devices:
     format: S32_LE
 
 filters:
+  notch_42:
+    type: Biquad
+    parameters:
+      type: Peaking
+      freq: 42
+      gain: -9.0
+      q: 8.0
+  notch_64:
+    type: Biquad
+    parameters:
+      type: Peaking
+      freq: 64
+      gain: -9.0
+      q: 8.0
   treble_air:
     type: Biquad
     parameters:
@@ -335,6 +349,8 @@ pipeline:
     names:
       - preamp
       - mode50_cut_L
+      - notch_42
+      - notch_64
       - kick_body_L
       - click_boost
       - filterL_1
@@ -364,6 +380,8 @@ pipeline:
       - preamp
       - kick_fill_R
       - mode50_cut_R
+      - notch_42
+      - notch_64
       - kick_body_R
       - click_boost
       - filterR_0
