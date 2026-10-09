@@ -47,14 +47,14 @@ filters:
     parameters:
       type: Peaking
       freq: 80
-      gain: 3.0
+      gain: 4.0
       q: 4.0
   kick_body_R:
     type: Biquad
     parameters:
       type: Peaking
       freq: 80
-      gain: 2.5
+      gain: 3.5
       q: 4.0
   click_boost:
     type: Biquad

@@ -195,8 +195,8 @@ def set_loud(on):
 
 
 KICKBODY_FLAG = "/home/rulio12/kickbody/enabled"
-KICKBODY_GAIN_L = 3.0
-KICKBODY_GAIN_R = 2.5
+KICKBODY_GAIN_L = 4.0
+KICKBODY_GAIN_R = 3.5
 
 
 def kickbody_enabled():
