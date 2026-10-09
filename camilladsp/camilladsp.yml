@@ -21,6 +21,13 @@ devices:
     format: S32_LE
 
 filters:
+  treble_air:
+    type: Biquad
+    parameters:
+      type: Peaking
+      freq: 11800
+      gain: 4.5
+      q: 3.0
   kick_body_L:
     type: Biquad
     parameters:
@@ -208,7 +215,7 @@ filters:
     parameters:
       type: Peaking
       freq: 7427.0
-      gain: 0.3
+      gain: 2.5
       q: 2.793
   filterR_0:
     type: Biquad
@@ -306,7 +313,7 @@ filters:
     parameters:
       type: Peaking
       freq: 7501.0
-      gain: -2.5
+      gain: 0.5
       q: 1.821
   loud_bass:
     type: Biquad
@@ -346,6 +353,7 @@ pipeline:
       - filterL_14
       - filterL_15
       - filterL_16
+      - treble_air
       - balance_L
       - delay_L
       - loud_bass
@@ -372,6 +380,7 @@ pipeline:
       - filterR_10
       - filterR_11
       - filterR_12
+      - treble_air
       - kick
       - delay_R
       - loud_bass
