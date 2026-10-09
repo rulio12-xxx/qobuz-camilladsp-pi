@@ -19,10 +19,10 @@ import time
 
 from camilladsp import CamillaClient
 
-REF_DB = -17.0          # niveau global de reference (compensation nulle) - seuil choisi par l'utilisateur le 23/09 : le loudness ne doit s'appliquer qu'en dessous de -17dB
+REF_DB = -20.0          # niveau global de reference (compensation nulle) - abaisse de 3dB le 02/10 (etait -17dB depuis le 23/09) : le loudness demarre plus tard
 BASS_STEP = 4.0         # dB de baisse pour +1 dB de grave
-BASS_MAX = 8.0          # compensation grave maximale
-TREBLE_RATIO = 0.5      # l'aigu suit le grave, a moitie
+BASS_MAX = 4.0          # compensation grave maximale - abaissee de 8.0 le 02/10 (le kick a ses propres filtres dedies, le large bande n'a plus besoin d'autant)
+TREBLE_RATIO = 0.75    # l'aigu suit le grave, aux 3/4 - teste le 02/10 a -32dB (etait 0.5)
 PERIOD = 2.0            # periode de mise a jour (s)
 MIN_DELTA = 0.3         # on n'ecrit que si le gain change d'au moins ca
 

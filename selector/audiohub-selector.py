@@ -16,11 +16,13 @@ d'arreter qobuz-proxy. La bascule se fait cote CamillaDSP, qui recharge la
 config pointant sur la bonne capture (via son websocket, port 1234).
 """
 
+import json
 import os
 import re
 import signal
 import subprocess
 import time
+import urllib.request
 from dataclasses import dataclass, field
 
 # ---------------------------------------------------------------------------
@@ -41,6 +43,7 @@ CAMILLA_HOST, CAMILLA_PORT = "127.0.0.1", 1234
 
 # Detection Qobuz : cote 'playback' du loopback 10
 QOBUZ_STATUS = "/proc/asound/Loopback/pcm0p/sub0/status"
+QOBUZ_API = "http://127.0.0.1:8689/api/status"   # API du qobuz-proxy
 MPD_STATUS = "/proc/asound/Loopback/pcm0p/sub1/status"
 
 T_ACTIVE, T_SILENCE = 2.0, 5.0
@@ -157,9 +160,18 @@ class Source:
 
 
 class QobuzSource(Source):
-    """Le proxy garde le device ouvert en permanence : seul 'RUNNING' compte."""
+    """Le proxy garde le loopback en RUNNING meme en pause (il y ecrit du
+    silence) : l'etat ALSA ne suffit pas. On demande au proxy s'il joue
+    vraiment ; repli sur l'etat ALSA si son API ne repond pas."""
 
     def raw_active(self):
+        try:
+            with urllib.request.urlopen(QOBUZ_API, timeout=1) as r:
+                st = json.load(r)
+            return any(sp.get("status") == "playing"
+                       for sp in st.get("speakers", []))
+        except Exception:
+            pass
         try:
             txt = open(QOBUZ_STATUS).read()
         except FileNotFoundError:

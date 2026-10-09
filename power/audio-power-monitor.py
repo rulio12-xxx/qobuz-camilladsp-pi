@@ -30,6 +30,7 @@ CDSP_HOST, CDSP_PORT = "127.0.0.1", 1234
 POLL_ON = 5
 WAKE_THRESHOLD = 1e-4
 HWPARAMS = "/proc/asound/card10/pcm0p/sub0/hw_params"
+BT_LOOPBACK = "plughw:11,0,0"   # meme loopback que audiohub-selector
 QOBUZ_TRIGGER = ("/streamcore/get-display-info", "/streamcore/get-connect-info")
 
 WAKE_DEVICES = [
@@ -41,6 +42,38 @@ WAKE_DEVICES = [
 
 # drapeau partage : leve par le thread de surveillance des logs qobuz
 _qobuz_connect = threading.Event()
+
+# En veille, audiohub-selector est arrete (PartOf=camilladsp) et son
+# bluealsa-aplay avec : plus rien n'alimente le loopback Bluetooth, donc
+# wait_for_signal() ne peut pas entendre le telephone. On prend le relais
+# pendant la veille, et on rend la main au selecteur au reveil.
+_bt_aplay = None
+
+
+def bt_listen_start():
+    global _bt_aplay
+    if _bt_aplay and _bt_aplay.poll() is None:
+        return
+    try:
+        _bt_aplay = subprocess.Popen(
+            ["bluealsa-aplay", f"--pcm={BT_LOOPBACK}"],
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        log("Veille : ecoute Bluetooth (bluealsa-aplay) lancee")
+    except Exception as e:
+        log(f"Veille : bluealsa-aplay impossible ({e})")
+        _bt_aplay = None
+
+
+def bt_listen_stop():
+    global _bt_aplay
+    if _bt_aplay and _bt_aplay.poll() is None:
+        _bt_aplay.terminate()
+        try:
+            _bt_aplay.wait(timeout=3)
+        except subprocess.TimeoutExpired:
+            _bt_aplay.kill()
+        log("Veille : ecoute Bluetooth arretee (rendue au selecteur)")
+    _bt_aplay = None
 
 
 def log(msg):
@@ -155,6 +188,7 @@ def wait_dac(timeout=10):
 def do_wake(raison):
     """Sequence commune de rallumage."""
     log(f"Reveil : {raison}")
+    bt_listen_stop()
     usb_power5V(True)
     wait_dac()
     subprocess.run(["amixer", "-c", "II", "sset", "DX5 II", "100%"],
@@ -213,6 +247,7 @@ def main():
                 last_s = None
                 continue
             # filet de securite : signal audio detecte (BT, radio, spdif)
+            bt_listen_start()
             if wait_for_signal():
                 woke_at = do_wake("signal audio")
                 state = "on"
