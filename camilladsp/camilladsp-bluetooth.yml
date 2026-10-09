@@ -113,7 +113,7 @@ filters:
   preamp:
     type: Gain
     parameters:
-      gain: -17.5
+      gain: -16.5
   limiter:
     type: Limiter
     parameters:
