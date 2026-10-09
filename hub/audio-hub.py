@@ -130,7 +130,7 @@ def status_json():
                        "bluetooth": bluetooth_status(), "tube": tube_level(),
                        "loud": loud_enabled(),
                        "kickbody": kickbody_enabled(),
-                       "rfix": rfix_enabled(),
+                       "notch": notch_enabled(),
                        "vol": vol})
 
 
@@ -219,22 +219,22 @@ def set_kickbody(on):
     subprocess.run([VENV_PY, "-c", code], capture_output=True, timeout=5)
 
 
-RFIX_FLAG = "/home/rulio12/rfix/enabled"
-RFIX_ON = {"filterR_0": 5.0, "filterR_01": 5.0, "kick_fill_R": 6.0}
-RFIX_OFF = {"filterR_0": 2.0, "filterR_01": 16.5, "kick_fill_R": 3.2}
+NOTCH_FLAG = "/home/rulio12/notch/enabled"
+NOTCH_ON = {"notch_42": -9.0, "notch_64": -9.0}
+NOTCH_OFF = {"notch_42": 0.0, "notch_64": 0.0}
 
 
-def rfix_enabled():
-    return os.path.exists(RFIX_FLAG)
+def notch_enabled():
+    return os.path.exists(NOTCH_FLAG)
 
 
-def set_rfix(on):
-    os.makedirs(os.path.dirname(RFIX_FLAG), exist_ok=True)
+def set_notch(on):
+    os.makedirs(os.path.dirname(NOTCH_FLAG), exist_ok=True)
     if on:
-        open(RFIX_FLAG, "w").close()
-    elif os.path.exists(RFIX_FLAG):
-        os.remove(RFIX_FLAG)
-    vals = RFIX_ON if on else RFIX_OFF
+        open(NOTCH_FLAG, "w").close()
+    elif os.path.exists(NOTCH_FLAG):
+        os.remove(NOTCH_FLAG)
+    vals = NOTCH_ON if on else NOTCH_OFF
     sets = "\n".join(
         f"c.config.set_value('/filters/{name}/parameters/gain', {gain})"
         for name, gain in vals.items()
@@ -351,7 +351,7 @@ iframe{border:0;width:100%;height:100%;background:#fff;}
     <button class="tubebtn" id="tubeToggle" onclick="toggleTube()">Lampes</button>
     <button class="tubebtn" id="loudToggle" onclick="toggleLoud()">Loudness</button>
     <button class="tubebtn" id="kbToggle" onclick="toggleKickbody()">Kick</button>
-    <button class="tubebtn" id="rfixToggle" onclick="toggleRfix()">Correction R</button>
+    <button class="tubebtn" id="notchToggle" onclick="toggleNotch()">Notch 42/64Hz</button>
   </div>
   <div id="services" style="margin-top:20px;"></div>
 </div>
@@ -419,8 +419,8 @@ async function refresh(){
     document.getElementById('loudToggle').textContent='Loudness '+(s.loud?'On':'Off');
     document.getElementById('kbToggle').classList.toggle('sel', !!s.kickbody);
     document.getElementById('kbToggle').textContent='Kick '+(s.kickbody?'On':'Off');
-    document.getElementById('rfixToggle').classList.toggle('sel', !!s.rfix);
-    document.getElementById('rfixToggle').textContent='Correction R '+(s.rfix?'On':'Off');
+    document.getElementById('notchToggle').classList.toggle('sel', !!s.notch);
+    document.getElementById('notchToggle').textContent='Notch 42/64Hz '+(s.notch?'On':'Off');
     if(s.vol){vmaj('vdac',s.vol.dac);vmaj('vcdsp',s.vol.cdsp);
       document.getElementById('vqobuzv').textContent=(s.vol.qobuz==null?'\u2013':s.vol.qobuz+'%');}
   }catch(e){}
@@ -434,7 +434,7 @@ async function rplay(u){await fetch('/play?url='+encodeURIComponent(u));setTimeo
 async function rstop(){await fetch('/stop');setTimeout(refresh,1500);}
 async function setLoud(v){await fetch('/loud?on='+v);setTimeout(refresh,800);}
 async function setKickbody(v){await fetch('/kickbody?on='+v);setTimeout(refresh,800);}
-async function setRfix(v){await fetch('/rfix?on='+v);setTimeout(refresh,800);}
+async function setNotch(v){await fetch('/notch?on='+v);setTimeout(refresh,800);}
 function toggleTube(){
   if(!lastStatus)return;
   setTube(lastStatus.tube&&lastStatus.tube!=='0'?'0':'3');
@@ -447,9 +447,9 @@ function toggleKickbody(){
   if(!lastStatus)return;
   setKickbody(lastStatus.kickbody?0:1);
 }
-function toggleRfix(){
+function toggleNotch(){
   if(!lastStatus)return;
-  setRfix(lastStatus.rfix?0:1);
+  setNotch(lastStatus.notch?0:1);
 }
 async function setTube(l){
   await fetch('/tube?level='+l);setTimeout(refresh,3000);
@@ -479,8 +479,8 @@ class H(BaseHTTPRequestHandler):
         elif u.path == "/kickbody":
             set_kickbody(q.get("on", ["0"])[0] == "1")
             self._send(200, "text/plain", b"ok")
-        elif u.path == "/rfix":
-            set_rfix(q.get("on", ["0"])[0] == "1")
+        elif u.path == "/notch":
+            set_notch(q.get("on", ["0"])[0] == "1")
             self._send(200, "text/plain", b"ok")
         elif u.path == "/vol":
             t = q.get("t", [""])[0]
