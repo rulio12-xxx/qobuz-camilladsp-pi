@@ -124,7 +124,7 @@ def status_json():
                 np = "en lecture"
     except Exception:
         pass
-    vol = {"dac": dac_volume(), "cdsp": cdsp_volume(), "qobuz": qobuz_volume()}
+    vol = {"dac": dac_volume(), "cdsp": cdsp_volume(), "qobuz": qobuz_volume(), "kickf": kick_freq()}
     return json.dumps({"services": services, "dac": dac, "loopback": loopback,
                        "rate": rate, "now_playing": np,
                        "bluetooth": bluetooth_status(), "tube": tube_level(),
@@ -178,6 +178,22 @@ def qobuz_volume():
     for a, b in reversed(vals):
         return int(a or b)
     return None
+
+
+def kick_freq(freq=None):
+    """Lit ou regle la frequence du filtre kick_body (L+R), en Hz."""
+    code = "from camilladsp import CamillaClient\n"
+    code += "c=CamillaClient('127.0.0.1',1234)\nc.connect()\n"
+    if freq is not None:
+        code += f"c.config.set_value('/filters/kick_body_L/parameters/freq', {freq})\n"
+        code += f"c.config.set_value('/filters/kick_body_R/parameters/freq', {freq})\n"
+    code += "print(c.config.get_value('/filters/kick_body_L/parameters/freq'))\n"
+    try:
+        r = subprocess.run([VENV_PY, "-c", code], capture_output=True,
+                           text=True, timeout=5)
+        return float(r.stdout.strip())
+    except Exception:
+        return None
 
 
 LOUD_FLAG = "/home/rulio12/loudness/enabled"
@@ -347,6 +363,10 @@ iframe{border:0;width:100%;height:100%;background:#fff;}
   <div class="volrow"><span class="vollab">Qobuz</span>
     <span style="flex:1;font-size:12px;color:#888;">pilot&#233; depuis l'app</span>
     <span class="volval" id="vqobuzv">&ndash;</span></div>
+  <div class="volrow"><span class="vollab">Kick Hz</span>
+    <input type="range" id="vkickf" min="50" max="120" step="1"
+      oninput="vshowHz('vkickf',this.value)" onchange="vsetKickFreq(this.value)">
+    <span class="volval" id="vkickfv">&ndash;</span></div>
   <div class="tuberow">
     <button class="tubebtn" id="tubeToggle" onclick="toggleTube()">Lampes</button>
     <button class="tubebtn" id="loudToggle" onclick="toggleLoud()">Loudness</button>
@@ -423,11 +443,16 @@ async function refresh(){
     document.getElementById('notchToggle').textContent='Notch 42/64Hz '+(s.notch?'On':'Off');
     if(s.vol){vmaj('vdac',s.vol.dac);vmaj('vcdsp',s.vol.cdsp);
       document.getElementById('vqobuzv').textContent=(s.vol.qobuz==null?'\u2013':s.vol.qobuz+'%');}
+    if(s.vol&&s.vol.kickf!=null)vmajHz('vkickf',s.vol.kickf);
   }catch(e){}
 }
 function vshow(id,v){document.getElementById(id+'v').textContent=Number(v).toFixed(1)+' dB';}
 function vmaj(id,v){if(v==null)return;const e=document.getElementById(id);
   if(document.activeElement!==e)e.value=v; vshow(id,v);}
+function vshowHz(id,v){document.getElementById(id+'v').textContent=Number(v).toFixed(0)+' Hz';}
+function vmajHz(id,v){if(v==null)return;const e=document.getElementById(id);
+  if(document.activeElement!==e)e.value=v; vshowHz(id,v);}
+async function vsetKickFreq(v){await fetch('/kickfreq?freq='+v);}
 async function vset(t,v){await fetch('/vol?t='+t+'&db='+v);}
 async function act(n){await fetch('/action?svc='+n);setTimeout(refresh,1500);}
 async function rplay(u){await fetch('/play?url='+encodeURIComponent(u));setTimeout(refresh,1500);}
@@ -496,6 +521,14 @@ class H(BaseHTTPRequestHandler):
             self._send(200, "text/plain", b"ok")
         elif u.path == "/tube":
             set_tube(q.get("level", ["0"])[0])
+            self._send(200, "text/plain", b"ok")
+        elif u.path == "/kickfreq":
+            try:
+                freq = float(q.get("freq", ["80"])[0])
+            except ValueError:
+                freq = None
+            if freq is not None and 40 <= freq <= 150:
+                kick_freq(freq)
             self._send(200, "text/plain", b"ok")
         elif u.path == "/play":
             if "url" in q: radio_play(q["url"][0])
