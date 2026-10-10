@@ -364,7 +364,7 @@ iframe{border:0;width:100%;height:100%;background:#fff;}
     <span style="flex:1;font-size:12px;color:#888;">pilot&#233; depuis l'app</span>
     <span class="volval" id="vqobuzv">&ndash;</span></div>
   <div class="volrow"><span class="vollab">Kick Hz</span>
-    <input type="range" id="vkickf" min="50" max="120" step="1"
+    <input type="range" id="vkickf" min="70" max="120" step="1"
       oninput="vshowHz('vkickf',this.value)" onchange="vsetKickFreq(this.value)">
     <span class="volval" id="vkickfv">&ndash;</span></div>
   <div class="tuberow">
