@@ -3,16 +3,18 @@ import asyncio
 import json
 import logging
 import os
+import time
 from contextlib import asynccontextmanager
 from pathlib import Path
 
 import paho.mqtt.client as mqtt
 import uvicorn
-from fastapi import FastAPI
+from fastapi import Body, FastAPI, HTTPException
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 import discovery
+from tariff import Tariff
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(message)s")
 log = logging.getLogger("domotique")
@@ -34,6 +36,28 @@ def publish(device):
 
 
 registry = discovery.Registry(on_change=publish)
+
+TARIFF_FILE = Path(E("TARIFF_FILE", Path(__file__).parent.parent / "tariff.json"))
+tariff = None
+try:
+    tariff = Tariff.load(TARIFF_FILE)
+except FileNotFoundError:
+    log.warning("%s absent : copier tariff.example.json en tariff.json", TARIFF_FILE)
+except Exception:
+    log.exception("tarif illisible")
+
+
+async def loop_tariff():
+    """Publie la periode HP/HC (retenue) a chaque changement."""
+    last = None
+    while True:
+        if tariff:
+            n = tariff.now(time.time())
+            if n["period"] != last:
+                last = n["period"]
+                mq.publish(f"{BASE}/tariff", json.dumps(n), retain=True)
+                log.info("periode tarifaire : %s", last)
+        await asyncio.sleep(30)
 
 
 async def scan_all():
@@ -63,9 +87,10 @@ async def lifespan(app):
     except Exception:
         log.exception("MQTT indisponible, on continue sans")
     mdns = await discovery.start_mdns(registry)
-    task = asyncio.create_task(loop_scan())
+    tasks = [asyncio.create_task(loop_scan()), asyncio.create_task(loop_tariff())]
     yield
-    task.cancel()
+    for t in tasks:
+        t.cancel()
     if mdns:
         await mdns[0].async_close()
     mq.publish(f"{BASE}/status", "offline", retain=True)
@@ -83,6 +108,25 @@ def devices():
 @app.get("/api/config")
 def config():
     return {"frigate_url": E("FRIGATE_URL", "http://localhost:5000")}
+
+
+@app.get("/api/tariff")
+def tariff_now():
+    if not tariff:
+        raise HTTPException(503, "tariff.json absent")
+    return tariff.now(time.time())
+
+
+@app.post("/api/tariff/report")
+def tariff_report(body: dict = Body(...)):
+    """{"intervals": [[start_ts, end_ts, kwh], ...], "export_kwh": 0} -> couts et economies."""
+    if not tariff:
+        raise HTTPException(503, "tariff.json absent")
+    try:
+        iv = [(float(a), float(b), float(k)) for a, b, k in body["intervals"]]
+        return tariff.report(iv, float(body.get("export_kwh", 0)))
+    except (KeyError, TypeError, ValueError):
+        raise HTTPException(422, "format : {intervals: [[start_ts, end_ts, kwh], ...]}")
 
 
 @app.post("/api/scan")

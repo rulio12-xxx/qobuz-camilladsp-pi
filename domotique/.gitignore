@@ -1,3 +1,4 @@
 .env
 mosquitto/passwd
 __pycache__/
+tariff.json
