@@ -1,0 +1,32 @@
+services:
+  mosquitto:
+    image: eclipse-mosquitto:2
+    restart: unless-stopped
+    ports: ["1883:1883", "9001:9001"]
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - ./mosquitto/passwd:/mosquitto/config/passwd:ro
+      - mosquitto-data:/mosquitto/data
+
+  frigate:
+    image: ghcr.io/blakeblackshear/frigate:stable
+    restart: unless-stopped
+    depends_on: [mosquitto]
+    shm_size: 256mb
+    ports: ["5000:5000", "8554:8554"]
+    env_file: .env
+    environment:
+      FRIGATE_MQTT_USER: ${MQTT_USER}
+      FRIGATE_MQTT_PASSWORD: ${MQTT_PASSWORD}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./frigate/config.yml:/config/config.yml:ro
+      - ${NAS_RECORDINGS:-./media}:/media/frigate
+      - type: tmpfs
+        target: /tmp/cache
+        tmpfs: {size: 1000000000}
+    # Accelerateur (Coral USB / Hailo / GPU Intel) : decommenter selon le materiel
+    # devices: ["/dev/bus/usb:/dev/bus/usb"]
+
+volumes:
+  mosquitto-data:

@@ -1,0 +1,3 @@
+.env
+mosquitto/passwd
+__pycache__/

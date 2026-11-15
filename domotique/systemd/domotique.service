@@ -1,0 +1,14 @@
+[Unit]
+Description=Serveur domotique (detection Shelly/Reolink/BLE, MQTT, web)
+After=network-online.target docker.service bluetooth.service
+Wants=network-online.target
+
+[Service]
+WorkingDirectory=/opt/domotique/app
+EnvironmentFile=/opt/domotique/.env
+ExecStart=/opt/domotique/venv/bin/python server.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
