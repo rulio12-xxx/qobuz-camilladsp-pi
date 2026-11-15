@@ -30,6 +30,19 @@ sur disque reseau) et interface web simplifiee.
 5. `docker compose up -d` puis `sudo ./install.sh && sudo systemctl enable --now domotique`.
 6. Interface : `http://<ip-du-pi>:8100` (bouton Scanner pour relancer la detection).
 
+## Installation sans Docker (Pi audio, en Wi-Fi)
+
+Sur le Pi qui fait deja l'audio, on n'installe ni Docker ni Frigate : seulement Mosquitto
+(paquet apt) et le serveur domotique, sous un service systemd limite a 50 % d'un coeur et
+300 Mo (`Nice=10`). Le NVR (Frigate) tournera sur une machine en Ethernet et utilisera ce broker.
+
+1. Copier `app/`, `setup-pi.sh`, `.env.example` dans `~/domotique` sur le Pi, puis
+   `python3 -m venv venv && venv/bin/pip install -r app/requirements.txt`.
+2. Creer `.env` depuis `.env.example` (mot de passe MQTT genere, `BLE_SCAN=0`).
+3. `sudo ~/domotique/setup-pi.sh` : installe Mosquitto, cree l'utilisateur MQTT et le service `domotique`.
+
+Le scan Bluetooth reste desactive (`BLE_SCAN=0`) : il partage la radio avec l'audio A2DP.
+
 ## Shelly
 
 Detectes automatiquement. Pour qu'ils parlent au broker : interface du Shelly >
