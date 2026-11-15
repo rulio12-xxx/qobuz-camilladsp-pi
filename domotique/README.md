@@ -1,10 +1,10 @@
-# Domotique
+﻿# Domotique
 
 Serveur maison sur Raspberry Pi : detection des appareils (Shelly, Reolink,
 Bluetooth), broker MQTT, NVR Frigate (3 cameras Reolink PoE, enregistrement
 sur disque reseau) et interface web simplifiee.
 
-    Cameras PoE --RTSP--> Frigate --MQTT--> Mosquitto <--> serveur domotique (web :8080)
+    Cameras PoE --RTSP--> Frigate --MQTT--> Mosquitto <--> serveur domotique (web :8100)
     Shelly ------------MQTT-----------------^                 |-- scan reseau (HTTP/mDNS/ONVIF)
                                                               '-- scan Bluetooth (BLE)
 
@@ -28,7 +28,7 @@ sur disque reseau) et interface web simplifiee.
 4. Cameras Reolink : creer un utilisateur dedie dans chaque camera, activer RTSP/ONVIF
    (Reglages > Reseau > Avance > Controle du serveur), IP fixes (reservation DHCP).
 5. `docker compose up -d` puis `sudo ./install.sh && sudo systemctl enable --now domotique`.
-6. Interface : `http://<ip-du-pi>:8080` (bouton Scanner pour relancer la detection).
+6. Interface : `http://<ip-du-pi>:8100` (bouton Scanner pour relancer la detection).
 
 ## Shelly
 

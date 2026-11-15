@@ -1,4 +1,4 @@
-"""Serveur domotique : detection + publication MQTT + interface web simplifiee."""
+﻿"""Serveur domotique : detection + publication MQTT + interface web simplifiee."""
 import asyncio
 import json
 import logging
@@ -143,4 +143,4 @@ def index():
 app.mount("/static", StaticFiles(directory=STATIC), name="static")
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=int(E("WEB_PORT", "8080")))
+    uvicorn.run(app, host="0.0.0.0", port=int(E("WEB_PORT", "8100")))
