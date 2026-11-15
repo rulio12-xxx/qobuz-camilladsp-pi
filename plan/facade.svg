@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-15 -25 260 95" width="1560" height="570" font-family="sans-serif" font-size="3.2">
+  <rect x="-15" y="-25" width="260" height="95" fill="#fff"/>
+  <!-- plaque 230 x 40, ep 2 -->
+  <rect x="0" y="0" width="230" height="40" fill="#eef3f6" stroke="#000" stroke-width="0.5"/>
+  <g fill="#fff" stroke="#c00" stroke-width="0.4">
+    <rect x="20" y="6" width="55" height="20"/>      <!-- A : Raspberry Pi -->
+    <rect x="115" y="4" width="50" height="20"/>     <!-- B -->
+    <rect x="81" y="15" width="10" height="10"/>     <!-- Toslink -->
+    <circle cx="103" cy="20" r="6"/>                 <!-- RCA 12 -->
+    <rect x="207.5" y="14" width="5" height="12"/>   <!-- fente -->
+    <circle cx="210" cy="9" r="1.5"/>
+    <circle cx="210" cy="31" r="1.5"/>
+  </g>
+  <g fill="#000">
+    <text x="47.5" y="17.5" text-anchor="middle">A 20x55 (Raspberry Pi)</text>
+    <text x="140" y="15.5" text-anchor="middle">B 20x50</text>
+    <text x="86" y="12" text-anchor="middle">Optique 10x10</text>
+    <text x="103" y="31" text-anchor="middle">RCA Ø12</text>
+    <text x="210" y="38" text-anchor="middle" font-size="2.6">fente 5x12</text>
+  </g>
+  <!-- cotes -->
+  <g stroke="#06c" stroke-width="0.25" fill="#06c">
+    <path d="M0 -6H230M0 -8V-4M230 -8V-4"/><text x="115" y="-8" text-anchor="middle" stroke="none">230</text>
+    <path d="M-6 0V40M-8 0H-4M-8 40H-4"/><text x="-9" y="21" text-anchor="end" stroke="none">40</text>
+    <path d="M0 -14H20M20 -16V-12"/><text x="10" y="-16" text-anchor="middle" stroke="none">20</text>
+    <path d="M75 -14H115M75 -16V-12M115 -16V-12"/><text x="95" y="-16" text-anchor="middle" stroke="none">40</text>
+    <path d="M210 -14H230M210 -16V-12M230 -16V-12"/><text x="220" y="-16" text-anchor="middle" stroke="none">20</text>
+  </g>
+  <text x="0" y="52" font-size="3">Plan provisoire - mm - epaisseur 2 mm - cotes depuis le bord cote Raspberry Pi. Rect. A a 6 mm du bord haut, B a 4 mm. Perçages Ø3 de la fente a confirmer.</text>
+</svg>
