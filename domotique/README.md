@@ -60,6 +60,22 @@ plages d'heures creuses. Aucun prix n'est fourni par defaut.
   decalage en heures creuses) et `savings_vs_base_eur` si `base_eur_kwh` est renseigne.
 - Un intervalle a cheval sur une bascule est reparti au prorata du temps ; tests : `python3 -m unittest test_tariff` dans `app/`.
 
+## Pilotage des Shelly
+
+Section « Pilotage » de l'interface : **Allumer**, **Eteindre**, **Auto HC** (relais allume pendant les
+heures creuses, eteint en heures pleines).
+
+- **Mode manuel par defaut** : rien n'agit seul tant qu'on n'a pas choisi Auto. Un clic Allumer/Eteindre
+  repasse en manuel.
+- **Auto refuse sans `tariff.json`** (heures creuses inconnues). `tariff.json` est relu a chaud.
+- **Prudence** : Shelly injoignable ou tarif absent = aucune commande ; l'etat est relu toutes les 30 s.
+- **Journal** : `~/domotique/state/actions.jsonl` (commandes, changements de mode, pertes de contact),
+  consultable via `GET /api/control/log`. Mode memorise dans `state/control.json`.
+- **MQTT** : `domotique/control/<id>/state` (mode, joignable, etat du relais).
+- API : `GET /api/control`, `POST /api/control/<id>/mode` `{"mode":"auto"|"manual"}`,
+  `POST /api/control/<id>/switch` `{"on":true|false}`.
+- Pas d'authentification sur l'API : tout appareil du Wi-Fi peut commander le relais.
+
 ## Notes
 
 - `hwaccel_args` de Frigate est regle pour le Pi 5 ; a adapter sur mini-PC (`preset-vaapi`).

@@ -13,6 +13,7 @@ from fastapi import Body, FastAPI, HTTPException
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
+import control
 import discovery
 from tariff import Tariff
 
@@ -48,13 +49,30 @@ def publish(device):
 registry = discovery.Registry(on_change=publish)
 
 TARIFF_FILE = Path(E("TARIFF_FILE", Path(__file__).parent.parent / "tariff.json"))
-tariff = None
-try:
-    tariff = Tariff.load(TARIFF_FILE)
-except FileNotFoundError:
-    log.warning("%s absent : copier tariff.example.json en tariff.json", TARIFF_FILE)
-except Exception:
-    log.exception("tarif illisible")
+_tariff = {"obj": None, "mtime": None}
+
+
+def get_tariff():
+    """Tarif courant ; relu automatiquement quand tariff.json est cree ou modifie."""
+    try:
+        m = TARIFF_FILE.stat().st_mtime
+    except OSError:
+        if _tariff["mtime"] is None:
+            return None
+        return _tariff["obj"]
+    if m != _tariff["mtime"]:
+        _tariff["mtime"] = m
+        try:
+            _tariff["obj"] = Tariff.load(TARIFF_FILE)
+            log.info("tarif charge depuis %s", TARIFF_FILE)
+        except Exception:
+            log.exception("tarif illisible, ancien tarif conserve")
+    return _tariff["obj"]
+
+
+STATE_DIR = Path(E("STATE_DIR", Path(__file__).parent.parent / "state"))
+controller = control.Controller(
+    registry, get_tariff, lambda t, p, r: mq.publish(t, p, retain=r), STATE_DIR, BASE)
 
 
 async def loop_tariff():
@@ -65,6 +83,7 @@ async def loop_tariff():
             last = None            # republier des que le broker est joignable
             await asyncio.sleep(2)
             continue
+        tariff = get_tariff()
         if tariff:
             n = tariff.now(time.time())
             if n["period"] != last:
@@ -100,7 +119,8 @@ async def lifespan(app):
     except Exception:
         log.exception("MQTT indisponible, on continue sans")
     mdns = await discovery.start_mdns(registry)
-    tasks = [asyncio.create_task(loop_scan()), asyncio.create_task(loop_tariff())]
+    tasks = [asyncio.create_task(loop_scan()), asyncio.create_task(loop_tariff()),
+             asyncio.create_task(controller.run())]
     yield
     for t in tasks:
         t.cancel()
@@ -125,14 +145,46 @@ def config():
 
 @app.get("/api/tariff")
 def tariff_now():
+    tariff = get_tariff()
     if not tariff:
         raise HTTPException(503, "tariff.json absent")
     return tariff.now(time.time())
 
 
+@app.get("/api/control")
+async def control_list():
+    return await controller.snapshot()
+
+
+@app.get("/api/control/log")
+def control_log(n: int = 50):
+    return controller.tail_log(min(max(n, 1), 500))
+
+
+@app.post("/api/control/{dev_id}/mode")
+def control_mode(dev_id: str, body: dict = Body(...)):
+    try:
+        controller.set_mode(dev_id, body.get("mode"))
+    except control.ControlError as e:
+        raise HTTPException(409, str(e))
+    return {"id": dev_id, "mode": controller.mode(dev_id)}
+
+
+@app.post("/api/control/{dev_id}/switch")
+async def control_switch(dev_id: str, body: dict = Body(...)):
+    if not isinstance(body.get("on"), bool):
+        raise HTTPException(422, "format : {\"on\": true|false}")
+    try:
+        await controller.switch(dev_id, body["on"])
+    except control.ControlError as e:
+        raise HTTPException(409, str(e))
+    return {"id": dev_id, "on": body["on"], "mode": controller.mode(dev_id)}
+
+
 @app.post("/api/tariff/report")
 def tariff_report(body: dict = Body(...)):
     """{"intervals": [[start_ts, end_ts, kwh], ...], "export_kwh": 0} -> couts et economies."""
+    tariff = get_tariff()
     if not tariff:
         raise HTTPException(503, "tariff.json absent")
     try:
