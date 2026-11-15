@@ -37,8 +37,8 @@ Contrainte a retenir : le Pi est **d'abord un preampli audio**. Tout ajout doit 
 | 8091 | `volume-widget` | curseur de volume (`~/volume-widget`) |
 | 8689 / 8690 | `qobuz-proxy` | lecteur Qobuz (UPnP/Connect) |
 | 111 | `rpcbind` | systeme |
-| **1883** | `mosquitto` | broker MQTT, *prevu par `domotique/setup-pi.sh`* |
-| **8100** | `domotique` | interface domotique, *prevu* (8080 est pris par le hub) |
+| **1883** | `mosquitto` | broker MQTT (authentifie) |
+| **8100** | `domotique` | interface domotique (8080 est pris par le hub) |
 
 Autres unites audio : `camilladsp`, `audiohub-selector`, `audio-power`, `loudness`, `wm8805`,
 `bluealsa`, `bt-softvol` (+ timer), `bt-open`, `qobuz-wake`, `selector-watchdog` (+ timer).
@@ -73,7 +73,10 @@ Autres : `domotique`, `vigie`, dossiers de bureau standard (`Desktop`, `Document
   retenue est l'enregistrement sur leur carte microSD (a verifier : presence de la carte) ;
   Frigate tournera plus tard sur une machine en Ethernet, avec ce broker.
 - **Scan Bluetooth desactive** (`BLE_SCAN=0`) : il partage la radio avec l'audio A2DP.
-- Installation : `~/domotique` prepare ; reste `sudo ~/domotique/setup-pi.sh` (Mosquitto + service).
+- **Installe le 2026-11-15** via `sudo ~/domotique/setup-pi.sh` : Mosquitto 2.0 (acces par mot de passe
+  obligatoire, utilisateur `domotique`) et service `domotique` actifs ; l'audio n'est pas affecte.
+- Topics MQTT : `domotique/status`, `domotique/devices/<id>` (retenus), `domotique/tariff`
+  (apres creation de `tariff.json`).
 - Detection : 1 Shelly 1 Gen3 trouve (192.168.1.43, sans mot de passe) ; aucune Reolink vue sur le
   sous-reseau 192.168.1.0/24 (autre reseau ou interface web desactivee ?).
 - Secrets : `~/domotique/.env` (droits 600) ; jamais dans le depot.
@@ -96,4 +99,4 @@ Autres : `domotique`, `vigie`, dossiers de bureau standard (`Desktop`, `Document
     ss -tlnp                       # ports en ecoute
     crontab -l                     # taches planifiees
 
-Hub audio : `http://192.168.1.81:8080` · Domotique : `http://192.168.1.81:8100` (apres installation).
+Hub audio : `http://192.168.1.81:8080` · Domotique : `http://192.168.1.81:8100`.

@@ -30,6 +30,16 @@ if E("MQTT_USER"):
 mq.will_set(f"{BASE}/status", "offline", retain=True)
 
 
+def on_connect(client, userdata, flags, reason_code, properties=None):
+    # (re)publie l'etat a chaque connexion : un publish avant connexion serait perdu
+    client.publish(f"{BASE}/status", "online", retain=True)
+    for d in registry.devices.values():
+        publish(d)
+
+
+mq.on_connect = on_connect
+
+
 def publish(device):
     pub = {k: v for k, v in device.items() if not k.startswith("_")}
     mq.publish(f"{BASE}/devices/{device['id']}", json.dumps(pub), retain=True)
@@ -51,6 +61,10 @@ async def loop_tariff():
     """Publie la periode HP/HC (retenue) a chaque changement."""
     last = None
     while True:
+        if not mq.is_connected():
+            last = None            # republier des que le broker est joignable
+            await asyncio.sleep(2)
+            continue
         if tariff:
             n = tariff.now(time.time())
             if n["period"] != last:
@@ -83,7 +97,6 @@ async def lifespan(app):
     try:
         mq.connect_async(E("MQTT_HOST", "127.0.0.1"), int(E("MQTT_PORT", "1883")))
         mq.loop_start()
-        mq.publish(f"{BASE}/status", "online", retain=True)
     except Exception:
         log.exception("MQTT indisponible, on continue sans")
     mdns = await discovery.start_mdns(registry)
