@@ -1,4 +1,4 @@
-﻿# Domotique
+# Domotique
 
 Serveur maison sur Raspberry Pi : detection des appareils (Shelly, Reolink,
 Bluetooth), broker MQTT, NVR Frigate (3 cameras Reolink PoE, enregistrement

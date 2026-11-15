@@ -1,4 +1,4 @@
-﻿"""Serveur domotique : detection + publication MQTT + interface web simplifiee."""
+"""Serveur domotique : detection + publication MQTT + interface web simplifiee."""
 import asyncio
 import json
 import logging
