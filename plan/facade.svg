@@ -6,21 +6,21 @@
 <rect class="c" x="18" y="6" width="55" height="20"/>
 <rect class="c" x="144.5" y="4" width="55" height="20"/>
 <rect class="c" x="83" y="15" width="10" height="10"/>
-<circle class="c" cx="118" cy="20" r="6"/><circle class="c" cx="88" cy="31" r="1.5"/>
+<circle class="c" cx="116" cy="20" r="6"/><circle class="c" cx="88" cy="31" r="1.5"/>
 <rect class="c" x="209.5" y="14" width="5" height="12"/>
 <circle class="c" cx="212" cy="10" r="1.5"/><circle class="c" cx="212" cy="30" r="1.5"/>
 <text class="l" x="45.5" y="17">A - Raspberry Pi 55 x 20</text>
 <text class="l" x="172" y="15">B 55 x 20</text>
 <text class="l" x="88" y="10">Optique 10 x 10</text><text class="l" x="88" y="37.5" font-size="2.3">Ø3 fixation</text>
-<text class="l" x="118" y="19.5">RCA</text><text class="l" x="118" y="23">Ø12</text>
+<text class="l" x="116" y="19.5">RCA</text><text class="l" x="116" y="23">Ø12</text>
 <text class="l" x="212" y="37" font-size="2.3">fente 5 x 12</text>
 <path class="e" d="M0 -10V0"/>
 <path class="e" d="M18 -10V0"/>
 <path class="e" d="M73 -10V0"/>
 <path class="e" d="M83 -10V0"/>
 <path class="e" d="M93 -10V0"/>
-<path class="e" d="M112 -10V0"/>
-<path class="e" d="M124 -10V0"/>
+<path class="e" d="M110 -10V0"/>
+<path class="e" d="M122 -10V0"/>
 <path class="e" d="M144.5 -10V0"/>
 <path class="e" d="M199.5 -10V0"/>
 <path class="e" d="M209.5 -10V0"/>
@@ -34,12 +34,12 @@
 <text class="t" x="78" y="-9" font-size="2.4">10</text>
 <path class="d" d="M83 -8H93M83 -9.2V-6.8M93 -9.2V-6.8"/>
 <text class="t" x="88" y="-9" font-size="2.4">10</text>
-<path class="d" d="M93 -8H112M93 -9.2V-6.8M112 -9.2V-6.8"/>
-<text class="t" x="102.5" y="-9" font-size="2.4">19</text>
-<path class="d" d="M112 -8H124M112 -9.2V-6.8M124 -9.2V-6.8"/>
-<text class="t" x="118.0" y="-9" font-size="2.4">12</text>
-<path class="d" d="M124 -8H144.5M124 -9.2V-6.8M144.5 -9.2V-6.8"/>
-<text class="t" x="134.25" y="-9" font-size="2.4">20.5</text>
+<path class="d" d="M93 -8H110M93 -9.2V-6.8M110 -9.2V-6.8"/>
+<text class="t" x="101.5" y="-9" font-size="2.4">17</text>
+<path class="d" d="M110 -8H122M110 -9.2V-6.8M122 -9.2V-6.8"/>
+<text class="t" x="116" y="-9" font-size="2.4">12</text>
+<path class="d" d="M122 -8H144.5M122 -9.2V-6.8M144.5 -9.2V-6.8"/>
+<text class="t" x="133.25" y="-9" font-size="2.4">22.5</text>
 <path class="d" d="M144.5 -8H199.5M144.5 -9.2V-6.8M199.5 -9.2V-6.8"/>
 <text class="t" x="172.0" y="-9" font-size="2.4">55</text>
 <path class="d" d="M199.5 -8H209.5M199.5 -9.2V-6.8M209.5 -9.2V-6.8"/>
