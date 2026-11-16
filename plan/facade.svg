@@ -6,12 +6,12 @@
 <rect class="c" x="18" y="6" width="55" height="20"/>
 <rect class="c" x="144.5" y="4" width="55" height="20"/>
 <rect class="c" x="83" y="15" width="10" height="10"/>
-<circle class="c" cx="118" cy="20" r="6"/>
+<circle class="c" cx="118" cy="20" r="6"/><circle class="c" cx="88" cy="31" r="1.5"/>
 <rect class="c" x="209.5" y="14" width="5" height="12"/>
 <circle class="c" cx="212" cy="9" r="1.5"/><circle class="c" cx="212" cy="31" r="1.5"/>
 <text class="l" x="45.5" y="17">A - Raspberry Pi 55 x 20</text>
 <text class="l" x="172" y="15">B 55 x 20</text>
-<text class="l" x="88" y="31">Optique</text><text class="l" x="88" y="34">10 x 10</text>
+<text class="l" x="88" y="10">Optique 10 x 10</text><text class="l" x="88" y="37.5" font-size="2.3">Ø3 fixation</text>
 <text class="l" x="118" y="19.5">RCA</text><text class="l" x="118" y="23">Ø12</text>
 <text class="l" x="212" y="37" font-size="2.3">fente 5 x 12</text>
 <path class="e" d="M0 -10V0"/>
@@ -64,6 +64,7 @@
 <text class="t" x="138.2" y="14.9" text-anchor="start" style="text-anchor:start" font-size="2.4">20</text>
 <path class="d" d="M137 24V40M136 24H138M136 40H138"/>
 <text class="t" x="138.2" y="32.9" text-anchor="start" style="text-anchor:start" font-size="2.4">16</text>
+<path class="d" d="M96 25V31M95 25H97M95 31H97"/><text class="t" x="97.2" y="28.9" style="text-anchor:start" font-size="2.4">6</text>
 <path class="d" d="M100 0V15M99 0H101M99 15H101"/>
 <text class="t" x="101.2" y="8.4" text-anchor="start" style="text-anchor:start" font-size="2.4">15</text>
 <path class="d" d="M100 15V25M99 15H101M99 25H101"/>
@@ -77,5 +78,6 @@
 <path class="d" d="M222 26V40M221 26H223M221 40H223"/>
 <text class="t" x="223.2" y="33.9" text-anchor="start" style="text-anchor:start" font-size="2.4">14</text>
 <text x="0" y="50" font-size="2.8">Fente : centre à 18 mm du bord droit. Perçages Ø3 à 5 mm de chaque extrémité de la fente (à confirmer).</text>
-<text x="0" y="55" font-size="2.8">Optique à 83 mm du bord (10 mm après A). A à 6 mm du bord haut, B à 4 mm ; B à 10 mm de la fente. Optique et RCA centrés en hauteur (20 mm).</text>
+<text x="0" y="55" font-size="2.8">Optique à 83 mm du bord (10 mm après A), trou de fixation Ø3 à 6 mm sous le carré (à confirmer).</text>
+<text x="0" y="60" font-size="2.8">A à 6 mm du bord haut, B à 4 mm ; B à 10 mm de la fente. Optique et RCA centrés en hauteur (20 mm).</text>
 </svg>
