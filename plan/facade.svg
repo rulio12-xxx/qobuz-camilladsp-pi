@@ -5,20 +5,20 @@
 <rect x="0" y="0" width="230" height="40" fill="#eef3f6" stroke="#000" stroke-width=".5"/>
 <rect class="c" x="18" y="6" width="55" height="20"/>
 <rect class="c" x="144.5" y="4" width="55" height="20"/>
-<rect class="c" x="94" y="15" width="10" height="10"/>
+<rect class="c" x="83" y="15" width="10" height="10"/>
 <circle class="c" cx="118" cy="20" r="6"/>
 <rect class="c" x="209.5" y="14" width="5" height="12"/>
 <circle class="c" cx="212" cy="9" r="1.5"/><circle class="c" cx="212" cy="31" r="1.5"/>
 <text class="l" x="45.5" y="17">A - Raspberry Pi 55 x 20</text>
 <text class="l" x="172" y="15">B 55 x 20</text>
-<text class="l" x="99" y="31">Optique</text><text class="l" x="99" y="34">10 x 10</text>
+<text class="l" x="88" y="31">Optique</text><text class="l" x="88" y="34">10 x 10</text>
 <text class="l" x="118" y="19.5">RCA</text><text class="l" x="118" y="23">Ø12</text>
 <text class="l" x="212" y="37" font-size="2.3">fente 5 x 12</text>
 <path class="e" d="M0 -10V0"/>
 <path class="e" d="M18 -10V0"/>
 <path class="e" d="M73 -10V0"/>
-<path class="e" d="M94 -10V0"/>
-<path class="e" d="M104 -10V0"/>
+<path class="e" d="M83 -10V0"/>
+<path class="e" d="M93 -10V0"/>
 <path class="e" d="M112 -10V0"/>
 <path class="e" d="M124 -10V0"/>
 <path class="e" d="M144.5 -10V0"/>
@@ -30,12 +30,12 @@
 <text class="t" x="9.0" y="-9" font-size="2.4">18</text>
 <path class="d" d="M18 -8H73M18 -9.2V-6.8M73 -9.2V-6.8"/>
 <text class="t" x="45.5" y="-9" font-size="2.4">55</text>
-<path class="d" d="M73 -8H94M73 -9.2V-6.8M94 -9.2V-6.8"/>
-<text class="t" x="83.5" y="-9" font-size="2.4">21</text>
-<path class="d" d="M94 -8H104M94 -9.2V-6.8M104 -9.2V-6.8"/>
-<text class="t" x="99.0" y="-9" font-size="2.4">10</text>
-<path class="d" d="M104 -8H112M104 -9.2V-6.8M112 -9.2V-6.8"/>
-<text class="t" x="108.0" y="-9" font-size="2.4">8</text>
+<path class="d" d="M73 -8H83M73 -9.2V-6.8M83 -9.2V-6.8"/>
+<text class="t" x="78" y="-9" font-size="2.4">10</text>
+<path class="d" d="M83 -8H93M83 -9.2V-6.8M93 -9.2V-6.8"/>
+<text class="t" x="88" y="-9" font-size="2.4">10</text>
+<path class="d" d="M93 -8H112M93 -9.2V-6.8M112 -9.2V-6.8"/>
+<text class="t" x="102.5" y="-9" font-size="2.4">19</text>
 <path class="d" d="M112 -8H124M112 -9.2V-6.8M124 -9.2V-6.8"/>
 <text class="t" x="118.0" y="-9" font-size="2.4">12</text>
 <path class="d" d="M124 -8H144.5M124 -9.2V-6.8M144.5 -9.2V-6.8"/>
@@ -52,24 +52,24 @@
 <path class="e" d="M0 -22V-10M230 -22V-10"/>
 <path class="d" d="M-6 0V40M-7 0H-5M-7 40H-5"/>
 <text class="t" x="-9.2" y="20.9" text-anchor="start" style="text-anchor:start" font-size="2.4">40</text>
-<path class="d" d="M82 0V6M81 0H83M81 6H83"/>
-<text class="t" x="83.2" y="3.9" text-anchor="start" style="text-anchor:start" font-size="2.4">6</text>
-<path class="d" d="M82 6V26M81 6H83M81 26H83"/>
-<text class="t" x="83.2" y="16.9" text-anchor="start" style="text-anchor:start" font-size="2.4">20</text>
-<path class="d" d="M82 26V40M81 26H83M81 40H83"/>
-<text class="t" x="83.2" y="33.9" text-anchor="start" style="text-anchor:start" font-size="2.4">14</text>
+<path class="d" d="M76 0V6M75 0H77M75 6H77"/>
+<text class="t" x="77.2" y="3.9" text-anchor="start" style="text-anchor:start" font-size="2.4">6</text>
+<path class="d" d="M76 6V26M75 6H77M75 26H77"/>
+<text class="t" x="77.2" y="16.9" text-anchor="start" style="text-anchor:start" font-size="2.4">20</text>
+<path class="d" d="M76 26V40M75 26H77M75 40H77"/>
+<text class="t" x="77.2" y="33.9" text-anchor="start" style="text-anchor:start" font-size="2.4">14</text>
 <path class="d" d="M137 0V4M136 0H138M136 4H138"/>
 <text class="t" x="138.2" y="2.9" text-anchor="start" style="text-anchor:start" font-size="2.4">4</text>
 <path class="d" d="M137 4V24M136 4H138M136 24H138"/>
 <text class="t" x="138.2" y="14.9" text-anchor="start" style="text-anchor:start" font-size="2.4">20</text>
 <path class="d" d="M137 24V40M136 24H138M136 40H138"/>
 <text class="t" x="138.2" y="32.9" text-anchor="start" style="text-anchor:start" font-size="2.4">16</text>
-<path class="d" d="M108 0V15M107 0H109M107 15H109"/>
-<text class="t" x="109.2" y="8.4" text-anchor="start" style="text-anchor:start" font-size="2.4">15</text>
-<path class="d" d="M108 15V25M107 15H109M107 25H109"/>
-<text class="t" x="109.2" y="20.9" text-anchor="start" style="text-anchor:start" font-size="2.4">10</text>
-<path class="d" d="M108 25V40M107 25H109M107 40H109"/>
-<text class="t" x="109.2" y="33.4" text-anchor="start" style="text-anchor:start" font-size="2.4">15</text>
+<path class="d" d="M100 0V15M99 0H101M99 15H101"/>
+<text class="t" x="101.2" y="8.4" text-anchor="start" style="text-anchor:start" font-size="2.4">15</text>
+<path class="d" d="M100 15V25M99 15H101M99 25H101"/>
+<text class="t" x="101.2" y="20.9" text-anchor="start" style="text-anchor:start" font-size="2.4">10</text>
+<path class="d" d="M100 25V40M99 25H101M99 40H101"/>
+<text class="t" x="101.2" y="33.4" text-anchor="start" style="text-anchor:start" font-size="2.4">15</text>
 <path class="d" d="M222 0V14M221 0H223M221 14H223"/>
 <text class="t" x="223.2" y="7.9" text-anchor="start" style="text-anchor:start" font-size="2.4">14</text>
 <path class="d" d="M222 14V26M221 14H223M221 26H223"/>
@@ -77,5 +77,5 @@
 <path class="d" d="M222 26V40M221 26H223M221 40H223"/>
 <text class="t" x="223.2" y="33.9" text-anchor="start" style="text-anchor:start" font-size="2.4">14</text>
 <text x="0" y="50" font-size="2.8">Fente : centre à 18 mm du bord droit. Perçages Ø3 à 5 mm de chaque extrémité de la fente (à confirmer).</text>
-<text x="0" y="55" font-size="2.8">A à 6 mm du bord haut, B à 4 mm ; B à 10 mm de la fente. Optique et RCA centrés en hauteur (20 mm).</text>
+<text x="0" y="55" font-size="2.8">Optique à 83 mm du bord (10 mm après A). A à 6 mm du bord haut, B à 4 mm ; B à 10 mm de la fente. Optique et RCA centrés en hauteur (20 mm).</text>
 </svg>
