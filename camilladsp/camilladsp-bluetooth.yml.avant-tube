@@ -60,9 +60,9 @@ filters:
     type: Biquad
     parameters:
       type: Peaking
-      freq: 2600
-      gain: 2.0
-      q: 3.0
+      freq: 4500
+      gain: 3.2
+      q: 1.02
   mode50_cut_R:
     type: Biquad
     parameters:

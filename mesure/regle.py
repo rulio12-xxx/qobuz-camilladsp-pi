@@ -29,6 +29,8 @@ for a in args:
             except ValueError:
                 val = v          # texte, ex. unit=samples
         c.config.set_value(f"/filters/{f}/parameters/{p}", val)
+    if "=" in a:
+        import time; time.sleep(0.2)   # laisse CamillaDSP prendre la valeur avant relecture
     k = a.split("=", 1)[0]
     f, p = k.split(".", 1)
     print(f"{k} = {c.config.get_value(f'/filters/{f}/parameters/{p}')}")

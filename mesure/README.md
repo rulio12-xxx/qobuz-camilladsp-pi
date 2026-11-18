@@ -109,3 +109,16 @@ bruit de fond a la position d ecoute ; kick2.py reste un controle du corps) :
   direct sont perdus a chaque veille de CamillaDSP : les ecrire avec persiste.py.
 - Resultats : k0_origine -> k8 (retard G entier) -> k9 (grave optimise, ecrit
   dans les YAML le 18/11 ; sauvegardes *.avant-kick-2026-11-18 sur le Pi).
+
+## Fort volume, renfort du clic, FIR de phase (18/11/2026, apres-midi)
+
+- Gain du Scarlett baisse d environ 25 dB : mesures possibles jusqu a 0 dB CamillaDSP.
+  ./fort.sh <tag> -21 -11 -6 -3 0 : ir2 + kick2 a chaque palier. Resultat k9 :
+  indicateurs du kick identiques de -21 a 0 dB, distorsion pendant le corps < -70 dB.
+- k10 = k9 + click_boost 4,5 kHz +3,2 dB Q1,02 (au lieu de 2,6 kHz +2 dB Q3), ecrit
+  dans les YAML (sauvegardes *.avant-renfort-2026-11-18). Clic G+D -2,2 -> +0,2 dB.
+- fir.py : FIR passe-tout qui avance le grave (25-150 Hz), commun aux deux voies
+  (--commun : calcule sur la somme G+D, garde la relation de phase G/D), retard
+  global 60 ms, 16384 coefficients ; fichiers fir/phase_L.raw et phase_R.raw
+  (copies de ~/camilladsp/fir). Prediction sur k10 : retard du corps G+D
+  12,6 -> 6,7 ms. ./variante_fir.py on|off|check|etat pour l essayer en direct.
