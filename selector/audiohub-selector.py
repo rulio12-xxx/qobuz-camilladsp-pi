@@ -23,6 +23,7 @@ import signal
 import subprocess
 import time
 import urllib.request
+from collections import deque
 from dataclasses import dataclass, field
 
 # ---------------------------------------------------------------------------
@@ -37,6 +38,8 @@ CONFIG = {
     "Qobuz":     f"{CFG_DIR}/camilladsp-qobuz.yml",
     "Bluetooth": f"{CFG_DIR}/camilladsp-bluetooth.yml",
     "Fichiers":  f"{CFG_DIR}/camilladsp-fichiers.yml",
+    "CD":        f"{CFG_DIR}/camilladsp-cd.yml",
+    "Vinyle":    f"{CFG_DIR}/camilladsp-vinyle.yml",
 }
 
 CAMILLA_HOST, CAMILLA_PORT = "127.0.0.1", 1234
@@ -51,6 +54,7 @@ T_QUARANTINE, POLL = 30.0, 0.5
 
 LOCK_FILE = "/run/audiohub/manual.lock"
 ENABLE_SPDIF = False
+SPDIF_RATES = {"CD": 44100, "Vinyle": 48000}     # l'interrupteur CN4 fixe la source
 
 
 def log(msg):
@@ -100,6 +104,16 @@ class Camilla:
         except Exception as e:
             log(f"CamillaDSP : echec du rechargement ({e})")
             self.cdsp = None                        # forcer une reconnexion
+
+
+    def capture_rate(self):
+        if not self._connect():
+            return None
+        try:
+            return self.cdsp.rate.capture()
+        except Exception:
+            self.cdsp = None
+            return None
 
 
 camilla = Camilla()
@@ -215,6 +229,22 @@ class BluetoothSource(Source):
         return False
 
 
+class ManualSource(Source):
+    """Entree S/PDIF (WM8805) : l'horloge tourne meme sans musique, donc pas de
+    detection automatique. Selection par le fichier manual.lock seulement."""
+
+    def raw_active(self):
+        return False
+
+    def start(self):
+        # au reveil, CamillaDSP peut mettre quelques secondes a ecouter
+        for _ in range(30):
+            if camilla._connect():
+                break
+            time.sleep(1)
+        camilla.load(CONFIG[self.name])
+
+
 class Aplay:
     """bluealsa-aplay SANS MAC : joue tout appareil connecte, chacun son tour."""
 
@@ -263,9 +293,11 @@ def main():
             SpdifSource("Coax2",   priority=3, rxsel=2, always_on=True),
         ]
     sources.append(bt)
+    sources += [ManualSource("CD", priority=10), ManualSource("Vinyle", priority=11)]
     sources.sort(key=lambda s: s.priority)
 
     aplay = Aplay()
+    rates = deque(maxlen=12)
     current = None
     running = True
 
@@ -289,15 +321,31 @@ def main():
             wanted = next((s for s in sources
                            if s.name.lower() == forced.lower()), current)
         else:
-            wanted = next((s for s in sources if s.available(now)), current)
+            repli = qobuz if isinstance(current, ManualSource) else current
+            wanted = next((s for s in sources if s.available(now)), repli)
+
+        if isinstance(current, ManualSource) and forced == current.name:
+            rates.append(camilla.capture_rate())
+            autre = next(n for n in SPDIF_RATES if n != current.name)
+            if rates.count(SPDIF_RATES[autre]) >= 4:
+                log(f"Frequence recue differente : passage sur {autre}")
+                with open(LOCK_FILE, "w") as f:
+                    f.write(autre)
+                rates.clear()
 
         if wanted is not current:
+            rates.clear()
             if current:
                 current.stop()
             if wanted:
                 wanted.start()
             log(f"--> source active : {wanted.name if wanted else 'aucune'}")
             current = wanted
+            try:
+                with open("/run/audiohub/current", "w") as f:
+                    f.write(wanted.name if wanted else "")
+            except OSError:
+                pass
             # TODO : ecran ST7789 + LED
 
         time.sleep(POLL)

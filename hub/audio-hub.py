@@ -126,12 +126,20 @@ def status_json():
         pass
     vol = {"dac": dac_volume(), "cdsp": cdsp_volume(), "qobuz": qobuz_volume(), "kickf": kick_freq()}
     return json.dumps({"services": services, "dac": dac, "loopback": loopback,
-                       "rate": rate, "now_playing": np,
+                       "rate": rate, "now_playing": np, "source": current_source(),
                        "bluetooth": bluetooth_status(), "tube": tube_level(),
                        "loud": loud_enabled(),
                        "kickbody": kickbody_enabled(),
                        "notch": notch_enabled(),
+                       "phase": phase_state(),
                        "vol": vol})
+
+
+def current_source():
+    try:
+        return open("/run/audiohub/current").read().strip() or None
+    except OSError:
+        return None
 
 
 VENV_PY = "/home/rulio12/audio-power/venv/bin/python3"
@@ -211,8 +219,8 @@ def set_loud(on):
 
 
 KICKBODY_FLAG = "/home/rulio12/kickbody/enabled"
-KICKBODY_GAIN_L = 4.0
-KICKBODY_GAIN_R = 3.5
+KICKBODY_GAIN_L = 4.8  # 18/11 : optimisation kick (mesure/optim_kick.py)
+KICKBODY_GAIN_R = 5.8
 
 
 def kickbody_enabled():
@@ -261,6 +269,38 @@ def set_notch(on):
     subprocess.run([VENV_PY, "-c", code], capture_output=True, timeout=5)
 
 
+def _phase_step(c):
+    for i, st in enumerate(c.config.active()["pipeline"]):
+        if st.get("type") == "Filter" and st.get("names") == ["phase_grave"]:
+            return i
+    return None
+
+
+def phase_state():
+    """True/False selon que le FIR de phase est en service ; None s'il est absent."""
+    code = ("from camilladsp import CamillaClient\n"
+            "c = CamillaClient('127.0.0.1', 1234)\nc.connect()\n"
+            "p = c.config.active()['pipeline']\n"
+            "s = [st for st in p if st.get('names') == ['phase_grave']]\n"
+            "print('absent' if not s else ('off' if s[0].get('bypassed') else 'on'))\n")
+    try:
+        r = subprocess.run([VENV_PY, "-c", code], capture_output=True, text=True, timeout=5)
+        v = r.stdout.strip()
+        return None if v in ("absent", "") else v == "on"
+    except Exception:
+        return None
+
+
+def set_phase(on):
+    """met en service / contourne le FIR, en direct, sans recharger."""
+    code = ("from camilladsp import CamillaClient\n"
+            "c = CamillaClient('127.0.0.1', 1234)\nc.connect()\n"
+            "p = c.config.active()['pipeline']\n"
+            "i = [k for k, st in enumerate(p) if st.get('names') == ['phase_grave']]\n"
+            f"i and c.config.set_value(f'/pipeline/{{i[0]}}/bypassed', {not on})\n")
+    subprocess.run([VENV_PY, "-c", code], capture_output=True, timeout=5)
+
+
 CRITICAL_SERVICES = ["camilladsp", "audiohub-selector", "qobuz-proxy"]
 
 
@@ -296,7 +336,8 @@ PAGE = """<!DOCTYPE html><html lang="fr"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Chaine audio</title>
 <link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#16324F">
+<meta name="theme-color" content="#F8F9FA">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap">
 <meta name="mobile-web-app-capable" content="yes"><style>
 :root{--bg:#16324F;--ac:#2A9D8F;--ko:#C62828;--warn:#E9A03B;}
 *{box-sizing:border-box;margin:0;font-family:system-ui,sans-serif;}
@@ -341,6 +382,42 @@ iframe{border:0;width:100%;height:100%;background:#fff;}
 .tubebtn.sel{background:var(--ac);color:#fff;border-color:var(--ac);}
 .tubeinfo{background:var(--bg);color:#fff;padding:12px;border-radius:10px;margin-bottom:16px;
    font-weight:600;text-align:center;}
+/* Theme Google (Material 3), comme l'appli Vigie */
+:root{--bg:#F8F9FA;--surface:#FFFFFF;--sunk:#F1F3F4;--ink:#1F1F1F;--muted:#5F6368;--line:#DADCE0;
+  --ac:#0B57D0;--accent-soft:#D3E3FD;--on-soft:#041E49;--ko:#D93025;--warn:#B06000;--okc:#188038;
+  --elev:0 1px 2px rgba(60,64,67,.3),0 1px 3px 1px rgba(60,64,67,.15);color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg:#131314;--surface:#1E1F20;--sunk:#282A2C;--ink:#E3E3E3;--muted:#9AA0A6;--line:#3C4043;
+  --ac:#A8C7FA;--accent-soft:#004A77;--on-soft:#D3E3FD;--ko:#F28B82;--warn:#FDD663;--okc:#81C995;--elev:0 1px 3px rgba(0,0,0,.5);color-scheme:dark}}
+*{font-family:"Google Sans Text","Roboto",system-ui,-apple-system,"Segoe UI",sans-serif;}
+body{background:var(--bg);color:var(--ink);font-size:15px;letter-spacing:.01em;}
+nav{background:var(--surface);gap:4px;padding:8px;box-shadow:var(--elev);}
+nav button{color:var(--muted);border-radius:999px;padding:10px 6px;font-size:14px;font-weight:500;}
+nav{flex-wrap:nowrap;gap:2px;padding:6px;}
+nav button{flex:1 1 auto;min-width:0;padding:8px 6px;font-size:13px;white-space:nowrap;}
+nav button.active{background:var(--accent-soft);color:var(--on-soft);font-weight:500;border-radius:999px;}
+.tab{padding:16px;overflow-y:auto;}
+.srcbar{display:flex;align-items:baseline;justify-content:space-between;gap:12px;background:var(--accent-soft);color:var(--on-soft);border-radius:16px;padding:14px 18px;margin-bottom:12px;}
+.srcl{font-size:13px;}
+.srcn{font:500 22px "Google Sans","Roboto",system-ui,sans-serif;}
+.hw{gap:6px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;}
+.pill{background:var(--sunk);border:0;color:var(--ink);border-radius:8px;padding:6px 10px;font-size:12px;font-weight:500;white-space:nowrap;flex-shrink:0;}
+.pill.src{background:var(--accent-soft);color:var(--on-soft);}
+.pill.src b{font-weight:700;}
+.dot{width:9px;height:9px;}
+.ok .dot{background:var(--okc);}
+.card,.volrow{background:var(--surface);border:0;border-radius:16px;box-shadow:var(--elev);padding:10px 16px;margin-bottom:8px;}
+.card .name,.vollab,.volval{color:var(--ink);font-weight:500;}
+.card button{background:transparent;color:var(--ac);border:1px solid var(--line);border-radius:999px;padding:6px 16px;font-weight:500;}
+input[type=range]{accent-color:var(--ac);}
+.tuberow{flex-wrap:wrap;margin-top:12px;}
+.tubebtn{flex:1 1 40%;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:10px 8px;font-size:14px;font-weight:500;}
+.tubebtn.sel{background:var(--accent-soft);color:var(--on-soft);border-color:transparent;}
+.st{background:var(--surface);border:0;border-radius:16px;box-shadow:var(--elev);color:var(--ink);font-weight:500;}
+.st:active{background:var(--accent-soft);color:var(--on-soft);}
+.st.stop{background:var(--ko);color:var(--surface);border-radius:999px;box-shadow:none;}
+.np{background:var(--accent-soft);color:var(--on-soft);border-radius:16px;font-weight:500;}
+.np.off{background:var(--sunk);color:var(--muted);}
+.tubeinfo{background:var(--sunk);color:var(--ink);border-radius:16px;font-weight:500;}
 </style></head><body>
 <nav>
   <button id="t0" class="active" onclick="tab(0)">Statuts</button>
@@ -360,9 +437,6 @@ iframe{border:0;width:100%;height:100%;background:#fff;}
     <input type="range" id="vcdsp" min="-40" max="0" step="0.5"
       oninput="vshow('vcdsp',this.value)" onchange="vset('cdsp',this.value)">
     <span class="volval" id="vcdspv">&ndash;</span></div>
-  <div class="volrow"><span class="vollab">Qobuz</span>
-    <span style="flex:1;font-size:12px;color:#888;">pilot&#233; depuis l'app</span>
-    <span class="volval" id="vqobuzv">&ndash;</span></div>
   <div class="volrow"><span class="vollab">Kick Hz</span>
     <input type="range" id="vkickf" min="70" max="120" step="1"
       oninput="vshowHz('vkickf',this.value)" onchange="vsetKickFreq(this.value)">
@@ -372,6 +446,7 @@ iframe{border:0;width:100%;height:100%;background:#fff;}
     <button class="tubebtn" id="loudToggle" onclick="toggleLoud()">Loudness</button>
     <button class="tubebtn" id="kbToggle" onclick="toggleKickbody()">Kick</button>
     <button class="tubebtn" id="notchToggle" onclick="toggleNotch()">Notch 42/64Hz</button>
+    <button class="tubebtn" id="phaseToggle" onclick="togglePhase()">Phase grave</button>
   </div>
   <div id="services" style="margin-top:20px;"></div>
 </div>
@@ -414,9 +489,9 @@ async function refresh(){
   try{
     const s=await (await fetch('/status')).json();
     lastStatus=s;
-    let hw='';
+    let hw='<span class="pill src">Entr&#233;e : <b>'+(s.source||'aucune')+'</b></span>';
     hw+='<span class="pill '+(s.dac?'ok':'warn')+'"><span class="dot"></span>DAC '+(s.dac?'pr\\u00e9sent':'veille')+'</span>';
-    hw+='<span class="pill '+(s.loopback?'ok':'warn')+'"><span class="dot"></span>Flux '+(s.loopback?(s.rate+' Hz'):'inactif')+'</span>';
+    hw+='<span class="pill '+(s.loopback?'ok':'warn')+'"><span class="dot"></span>'+(s.loopback?(s.rate+' Hz'):'Inactif')+'</span>';
     if(s.bluetooth){var bt=s.bluetooth;hw+='<span class="pill '+(bt.playing?'ok':'warn')+'"><span class="dot"></span>'+(bt.playing?'\\u25b6 BT: ':'BT: ')+bt.name+(bt.playing?'':' (connect\\u00e9)')+'</span>';}
     if(s.tube&&s.tube!=='0'){hw+='<span class="pill ok"><span class="dot"></span>Lampes: '+TUBELABELS[s.tube]+'</span>';}
     document.getElementById('hw').innerHTML=hw;
@@ -441,8 +516,9 @@ async function refresh(){
     document.getElementById('kbToggle').textContent='Kick '+(s.kickbody?'On':'Off');
     document.getElementById('notchToggle').classList.toggle('sel', !!s.notch);
     document.getElementById('notchToggle').textContent='Notch 42/64Hz '+(s.notch?'On':'Off');
-    if(s.vol){vmaj('vdac',s.vol.dac);vmaj('vcdsp',s.vol.cdsp);
-      document.getElementById('vqobuzv').textContent=(s.vol.qobuz==null?'\u2013':s.vol.qobuz+'%');}
+    {const b=document.getElementById('phaseToggle');b.classList.toggle('sel',s.phase===true);
+     b.textContent='Phase grave '+(s.phase===true?'On':s.phase===false?'Off':'absente');b.disabled=(s.phase==null);}
+    if(s.vol){vmaj('vdac',s.vol.dac);vmaj('vcdsp',s.vol.cdsp);}
     if(s.vol&&s.vol.kickf!=null)vmajHz('vkickf',s.vol.kickf);
   }catch(e){}
 }
@@ -460,6 +536,8 @@ async function rstop(){await fetch('/stop');setTimeout(refresh,1500);}
 async function setLoud(v){await fetch('/loud?on='+v);setTimeout(refresh,800);}
 async function setKickbody(v){await fetch('/kickbody?on='+v);setTimeout(refresh,800);}
 async function setNotch(v){await fetch('/notch?on='+v);setTimeout(refresh,800);}
+async function setPhase(v){await fetch('/phase?on='+v);setTimeout(refresh,800);}
+function togglePhase(){if(!lastStatus||lastStatus.phase==null)return;setPhase(lastStatus.phase?0:1);}
 function toggleTube(){
   if(!lastStatus)return;
   setTube(lastStatus.tube&&lastStatus.tube!=='0'?'0':'3');
@@ -503,6 +581,9 @@ class H(BaseHTTPRequestHandler):
             self._send(200, "text/plain", b"ok")
         elif u.path == "/kickbody":
             set_kickbody(q.get("on", ["0"])[0] == "1")
+            self._send(200, "text/plain", b"ok")
+        elif u.path == "/phase":
+            set_phase(q.get("on", ["0"])[0] == "1")
             self._send(200, "text/plain", b"ok")
         elif u.path == "/notch":
             set_notch(q.get("on", ["0"])[0] == "1")
