@@ -1,0 +1,601 @@
+{
+ "fichier": "/home/rulio12/camilladsp/configs/camilladsp-fichiers.yml",
+ "config": {
+  "title": null,
+  "description": null,
+  "devices": {
+   "samplerate": 44100,
+   "chunksize": 2048,
+   "queuelimit": 4,
+   "silence_threshold": -80.0,
+   "silence_timeout": 200.0,
+   "capture": {
+    "type": "Alsa",
+    "channels": 2,
+    "device": "hw:10,1,1",
+    "format": "F32_LE",
+    "stop_on_inactive": null,
+    "link_volume_control": null,
+    "link_mute_control": null,
+    "labels": null
+   },
+   "playback": {
+    "type": "Alsa",
+    "channels": 2,
+    "device": "hw:CARD=II,DEV=0",
+    "format": "S32_LE"
+   },
+   "enable_rate_adjust": true,
+   "target_level": null,
+   "adjust_period": null,
+   "resampler": {
+    "type": "AsyncSinc",
+    "profile": "Balanced"
+   },
+   "capture_samplerate": 44100,
+   "stop_on_rate_change": null,
+   "rate_measure_interval": null,
+   "volume_ramp_time": null,
+   "volume_limit": null,
+   "multithreaded": null,
+   "worker_threads": null
+  },
+  "mixers": null,
+  "filters": {
+   "filterR_3": {
+    "type": "Biquad",
+    "description": null,
+    "parameters": {
+     "type": "Peaking",
+     "freq": 304.0,
+     "q": 4.999,
+     "gain": 2.5
+    }
+   },
+   "notch_64": {
+    "type": "Biquad",
+    "description": null,
+    "parameters": {
+     "type": "Peaking",
+     "freq": 64.0,
+     "q": 8.0,
+     "gain": 0.0
+    }
+   },
+   "filterL_13": {
+    "type": "Biquad",
+    "description": null,
+    "parameters": {
+     "type": "Peaking",
+     "freq": 1494.0,
+     "q": 1.052,
+     "gain": -3.2
+    }
+   },
+   "delay_L": {
+    "type": "Delay",
+    "description": null,
+    "parameters": {
+     "delay": 0.0,
+     "unit": "samples",
+     "subsample": false
+    }
+   },
+   "filterL_1": {
+    "type": "Biquad",
+    "description": null,
+    "parameters": {
+     "type": "Peaking",
+     "freq": 56.1,
+     "q": 5.381,
+     "gain": -3.0
+    }
+   },
+   "filterL_14": {
+    "type": "Biquad",
+    "description": null,
+    "parameters": {
+     "type": "Peaking",
+     "freq": 1948.0,
+     "q": 5.621,
+     "gain": 7.0
+    }
+   },
+   "filterL_4": {
+    "type": "Biquad",
+    "description": null,
+    "parameters": {
+     "type": "Peaking",
+     "freq": 113.5,
+     "q": 4.477,
+     "gain": 4.5
+    }
+   },
+   "filterR_12": {
+    "type": "Biquad",
+    "description": null,
+    "parameters": {
+     "type": "Peaking",
+     "freq": 7501.0,
+     "q": 1.821,
+     "gain": 0.5
+    }
+   },
+   "kick_body_R": {
+    "type": "Biquad",
+    "description": null,
+    "parameters": {
+     "type": "Peaking",
+     "freq": 80.0,
+     "q": 4.0,
+     "gain": 3.5
+    }
+   },
+   "filterL_6": {
+    "type": "Biquad",
+    "description": null,
+    "parameters": {
+     "type": "Peaking",
+     "freq": 160.5,
+     "q": 4.542,
+     "gain": -11.5
+    }
+   },
+   "loud_bass": {
+    "type": "Biquad",
+    "description": null,
+    "parameters": {
+     "type": "Peaking",
+     "freq": 80.0,
+     "q": 4.0,
+     "gain": 0.0
+    }
+   },
+   "loud_treble": {
+    "type": "Biquad",
+    "description": null,
+    "parameters": {
+     "type": "Peaking",
+     "freq": 3500.0,
+     "q": 1.2,
+     "gain": 0.0
+    }
+   },
+   "filterR_11": {
+    "type": "Biquad",
+    "description": null,
+    "parameters": {
+     "type": "Peaking",
+     "freq": 5587.0,
+     "q": 7.308,
+     "gain": 2.6
+    }
+   },
+   "filterR_5": {
+    "type": "Biquad",
+    "description": null,
+    "parameters": {
+     "type": "Peaking",
+     "freq": 501.0,
+     "q": 7.496,
+     "gain": 5.8
+    }
+   },
+   "notch_42": {
+    "type": "Biquad",
+    "description": null,
+    "parameters": {
+     "type": "Peaking",
+     "freq": 42.0,
+     "q": 8.0,
+     "gain": 0.0
+    }
+   },
+   "preamp": {
+    "type": "Gain",
+    "description": null,
+    "parameters": {
+     "gain": -20.5,
+     "inverted": null,
+     "mute": null,
+     "scale": null
+    }
+   },
+   "filterR_1": {
+    "type": "Biquad",
+    "description": null,
+    "parameters": {
+     "type": "Peaking",
+     "freq": 150.0,
+     "q": 7.18,
+     "gain": 1.8
+    }
+   },
+   "treble_air": {
+    "type": "Biquad",
+    "description": null,
+    "parameters": {
+     "type": "Peaking",
+     "freq": 11800.0,
+     "q": 3.0,
+     "gain": 4.5
+    }
+   },
+   "filterL_16": {
+    "type": "Biquad",
+    "description": null,
+    "parameters": {
+     "type": "Peaking",
+     "freq": 7427.0,
+     "q": 2.793,
+     "gain": 2.5
+    }
+   },
+   "filterR_2": {
+    "type": "Biquad",
+    "description": null,
+    "parameters": {
+     "type": "Peaking",
+     "freq": 223.0,
+     "q": 2.791,
+     "gain": -3.0
+    }
+   },
+   "filterL_9": {
+    "type": "Biquad",
+    "description": null,
+    "parameters": {
+     "type": "Peaking",
+     "freq": 328.0,
+     "q": 2.907,
+     "gain": -5.3
+    }
+   },
+   "filterR_9": {
+    "type": "Biquad",
+    "description": null,
+    "parameters": {
+     "type": "Peaking",
+     "freq": 2248.0,
+     "q": 7.493,
+     "gain": 1.8
+    }
+   },
+   "kick": {
+    "type": "Biquad",
+    "description": null,
+    "parameters": {
+     "type": "Peaking",
+     "freq": 180.0,
+     "q": 0.9,
+     "gain": -2.5
+    }
+   },
+   "filterL_3": {
+    "type": "Biquad",
+    "description": null,
+    "parameters": {
+     "type": "Peaking",
+     "freq": 93.2,
+     "q": 4.272,
+     "gain": -7.9
+    }
+   },
+   "filterL_11": {
+    "type": "Biquad",
+    "description": null,
+    "parameters": {
+     "type": "Peaking",
+     "freq": 504.0,
+     "q": 1.212,
+     "gain": 5.5
+    }
+   },
+   "filterL_15": {
+    "type": "Biquad",
+    "description": null,
+    "parameters": {
+     "type": "Peaking",
+     "freq": 3258.0,
+     "q": 4.193,
+     "gain": -3.1
+    }
+   },
+   "filterL_5": {
+    "type": "Biquad",
+    "description": null,
+    "parameters": {
+     "type": "Peaking",
+     "freq": 124.0,
+     "q": 7.419,
+     "gain": 0.0
+    }
+   },
+   "filterL_10": {
+    "type": "Biquad",
+    "description": null,
+    "parameters": {
+     "type": "Peaking",
+     "freq": 406.0,
+     "q": 4.999,
+     "gain": -4.2
+    }
+   },
+   "filterR_10": {
+    "type": "Biquad",
+    "description": null,
+    "parameters": {
+     "type": "Peaking",
+     "freq": 3478.0,
+     "q": 2.629,
+     "gain": -2.4
+    }
+   },
+   "filterR_6": {
+    "type": "Biquad",
+    "description": null,
+    "parameters": {
+     "type": "Peaking",
+     "freq": 663.0,
+     "q": 6.966,
+     "gain": 3.1
+    }
+   },
+   "filterL_2": {
+    "type": "Biquad",
+    "description": null,
+    "parameters": {
+     "type": "Peaking",
+     "freq": 70.5,
+     "q": 2.992,
+     "gain": -0.5
+    }
+   },
+   "filterL_8": {
+    "type": "Biquad",
+    "description": null,
+    "parameters": {
+     "type": "Peaking",
+     "freq": 244.0,
+     "q": 4.911,
+     "gain": -4.7
+    }
+   },
+   "filterL_12": {
+    "type": "Biquad",
+    "description": null,
+    "parameters": {
+     "type": "Peaking",
+     "freq": 905.0,
+     "q": 5.0,
+     "gain": 1.5
+    }
+   },
+   "mode50_cut_R": {
+    "type": "Biquad",
+    "description": null,
+    "parameters": {
+     "type": "Peaking",
+     "freq": 50.0,
+     "q": 5.5,
+     "gain": -10.0
+    }
+   },
+   "kick_fill_R": {
+    "type": "Biquad",
+    "description": null,
+    "parameters": {
+     "type": "Peaking",
+     "freq": 70.0,
+     "q": 1.8,
+     "gain": 3.2
+    }
+   },
+   "filterR_0": {
+    "type": "Biquad",
+    "description": null,
+    "parameters": {
+     "type": "Peaking",
+     "freq": 56.0,
+     "q": 3.5,
+     "gain": 2.0
+    }
+   },
+   "balance_L": {
+    "type": "Biquad",
+    "description": null,
+    "parameters": {
+     "type": "Peaking",
+     "freq": 790.0,
+     "q": 0.55,
+     "gain": -2.3
+    }
+   },
+   "delay_R": {
+    "type": "Delay",
+    "description": null,
+    "parameters": {
+     "delay": 0.0,
+     "unit": "ms",
+     "subsample": false
+    }
+   },
+   "filterR_8": {
+    "type": "Biquad",
+    "description": null,
+    "parameters": {
+     "type": "Peaking",
+     "freq": 1632.0,
+     "q": 3.217,
+     "gain": -4.5
+    }
+   },
+   "mode50_cut_L": {
+    "type": "Biquad",
+    "description": null,
+    "parameters": {
+     "type": "Peaking",
+     "freq": 50.0,
+     "q": 4.5,
+     "gain": -10.0
+    }
+   },
+   "filterR_01": {
+    "type": "Biquad",
+    "description": null,
+    "parameters": {
+     "type": "Peaking",
+     "freq": 64.0,
+     "q": 6.0,
+     "gain": 16.5
+    }
+   },
+   "kick_body_L": {
+    "type": "Biquad",
+    "description": null,
+    "parameters": {
+     "type": "Peaking",
+     "freq": 80.0,
+     "q": 4.0,
+     "gain": 4.0
+    }
+   },
+   "click_boost": {
+    "type": "Biquad",
+    "description": null,
+    "parameters": {
+     "type": "Peaking",
+     "freq": 2600.0,
+     "q": 3.0,
+     "gain": 2.0
+    }
+   },
+   "filterR_4": {
+    "type": "Biquad",
+    "description": null,
+    "parameters": {
+     "type": "Peaking",
+     "freq": 447.0,
+     "q": 3.907,
+     "gain": -4.6
+    }
+   },
+   "filterR_7": {
+    "type": "Biquad",
+    "description": null,
+    "parameters": {
+     "type": "Peaking",
+     "freq": 1013.0,
+     "q": 2.385,
+     "gain": -4.3
+    }
+   },
+   "limiter": {
+    "type": "Limiter",
+    "description": null,
+    "parameters": {
+     "soft_clip": true,
+     "clip_limit": -0.5
+    }
+   },
+   "filterL_7": {
+    "type": "Biquad",
+    "description": null,
+    "parameters": {
+     "type": "Peaking",
+     "freq": 231.0,
+     "q": 6.877,
+     "gain": 1.5
+    }
+   }
+  },
+  "processors": null,
+  "pipeline": [
+   {
+    "type": "Filter",
+    "channels": [
+     0
+    ],
+    "names": [
+     "preamp",
+     "mode50_cut_L",
+     "notch_42",
+     "notch_64",
+     "kick_body_L",
+     "click_boost",
+     "filterL_1",
+     "filterL_2",
+     "filterL_3",
+     "filterL_4",
+     "filterL_5",
+     "filterL_6",
+     "filterL_7",
+     "filterL_8",
+     "filterL_9",
+     "filterL_10",
+     "filterL_11",
+     "filterL_12",
+     "filterL_13",
+     "filterL_14",
+     "filterL_15",
+     "filterL_16",
+     "treble_air",
+     "balance_L",
+     "delay_L",
+     "loud_bass",
+     "loud_treble"
+    ],
+    "description": null,
+    "bypassed": null
+   },
+   {
+    "type": "Filter",
+    "channels": [
+     1
+    ],
+    "names": [
+     "preamp",
+     "kick_fill_R",
+     "mode50_cut_R",
+     "notch_42",
+     "notch_64",
+     "kick_body_R",
+     "click_boost",
+     "filterR_0",
+     "filterR_01",
+     "filterR_1",
+     "filterR_2",
+     "filterR_3",
+     "filterR_4",
+     "filterR_5",
+     "filterR_6",
+     "filterR_7",
+     "filterR_8",
+     "filterR_9",
+     "filterR_10",
+     "filterR_11",
+     "filterR_12",
+     "treble_air",
+     "kick",
+     "delay_R",
+     "loud_bass",
+     "loud_treble"
+    ],
+    "description": null,
+    "bypassed": null
+   },
+   {
+    "type": "Filter",
+    "channels": [
+     0,
+     1
+    ],
+    "names": [
+     "limiter"
+    ],
+    "description": null,
+    "bypassed": null
+   }
+  ]
+ }
+}

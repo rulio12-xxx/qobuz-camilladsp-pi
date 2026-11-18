@@ -82,4 +82,30 @@ reglages live ; reporter les valeurs retenues dans les YAML de `camilladsp/`.
   ~/audio-power/venv/bin/python3.
 - page/ : page des courbes (sans correction / ancienne / nouvelle correction),
   publiee sur claude.ai ; courbes.json est regenere par courbes.py.
-- Reference : resultats/2026-11-18_base-notch-off (tag git reglage-2026-11-18-base).
+- Reference : resultats/2026-11-18_base-notches-actifs (tag git reglage-2026-11-18-base).
+
+## Kick : reponses impulsionnelles et optimisation (18/11/2026)
+
+Methode fiable (le clic enregistre directement n arrive que 10-14 dB au-dessus du
+bruit de fond a la position d ecoute ; kick2.py reste un controle du corps) :
+
+    ./reveil.sh                                   # reveille DAC + CamillaDSP
+    curl -s "localhost:8080/vol?t=cdsp&db=-16"    # volume de mesure (micro < -4 dBFS)
+    python3 ir2.py mesure <etiquette>             # reponses G et D, meme horloge
+    python3 ir2.py predit <etiquette> filtre.param=valeur ...   # effet calcule
+    python3 optim_kick.py <etiquette> [--bosse 4] [--clic 2]    # ~15 min, nohup conseille
+    ./regle.py filtre.param=valeur ...            # appliquer en direct (perdu a la veille)
+    ./restaure.py resultats/ir/<etiquette>.json   # revenir a l etat d une mesure
+    python3 persiste.py resultats/ir/<etiquette>.json <suffixe>  # ecrire dans les YAML
+    python3 kick_page.py page-kick/kick.json "<etiquette>:<nom>" ...
+
+- ir2 : deux sweeps de 16 s decales de 1 s (G puis D) ; bruit ~-71 dB ; le kick a
+  l oreille est calcule (kick x reponse), G+D = somme. Prediction verifiee a 0,1 dB.
+- Indicateurs (coup G+D) : clic (energie 1,5-8 kHz / corps 40-120 Hz, vs fichier),
+  bavure (aigu 6-40 ms apres le clic / clic), retard du corps (mi-hauteur, vs
+  fichier), traine (tenue 60-300 ms vs fichier).
+- Pieges : un retard "subsample" ajoute un passe-tout ; utiliser un nombre entier
+  d echantillons (delay_L = 55 ech. = 1,25 ms). Les notches et autres reglages en
+  direct sont perdus a chaque veille de CamillaDSP : les ecrire avec persiste.py.
+- Resultats : k0_origine -> k8 (retard G entier) -> k9 (grave optimise, ecrit
+  dans les YAML le 18/11 ; sauvegardes *.avant-kick-2026-11-18 sur le Pi).

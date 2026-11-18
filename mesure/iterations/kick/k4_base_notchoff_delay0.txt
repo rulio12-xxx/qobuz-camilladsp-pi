@@ -1,0 +1,3 @@
+delay_L.delay = 0.0
+notch_42.gain = 0.0
+notch_64.gain = 0.0

@@ -1,0 +1,45 @@
+passe 1 : cout 141.86
+passe 2 : cout 132.18
+passe 3 : cout 127.54
+passe 4 : cout 121.55
+passe 5 : cout 111.90
+passe 6 : cout 106.23
+passe 7 : cout 101.89
+passe 8 : cout 98.58
+passe 9 : cout 94.98
+passe 10 : cout 93.79
+passe 11 : cout 92.52
+passe 12 : cout 92.16
+passe 13 : cout 92.15
+passe 14 : cout 91.41
+passe 15 : cout 90.86
+passe 16 : cout 90.86
+passe 17 : cout 88.03
+passe 18 : cout 87.43
+passe 19 : cout 87.05
+passe 20 : cout 86.86
+passe 21 : cout 86.84
+passe 22 : cout 86.84
+passe 23 : cout 86.05
+passe 24 : cout 85.85
+passe 25 : cout 85.71
+passe 26 : cout 85.49
+passe 27 : cout 85.23
+passe 28 : cout 85.09
+passe 29 : cout 84.81
+passe 30 : cout 84.44
+passe 31 : cout 84.10
+passe 32 : cout 83.75
+passe 33 : cout 83.63
+passe 34 : cout 83.50
+passe 35 : cout 83.39
+passe 36 : cout 83.21
+passe 37 : cout 83.05
+passe 38 : cout 82.92
+passe 39 : cout 82.76
+passe 40 : cout 82.65
+avant : cout 179.8 (courbe 33.0, GD 33.1, kick 105.4, sobriete 8.4)
+   kick G+D : clic -5.29 dB, bavure -1.90 dB, retard corps +15.44 ms, traine -6.54 dB ; grave : ecart G-D moyen 3.4 dB (max 8.6)
+apres : cout 82.6 (courbe 36.6, GD 20.0, kick 11.9, sobriete 14.1)
+   kick G+D : clic -0.19 dB, bavure -2.04 dB, retard corps +12.93 ms, traine -1.77 dB ; grave : ecart G-D moyen 2.6 dB (max 6.5)
+CHANGEMENTS click_boost.gain=3.2 click_boost.freq=4500.0 click_boost.q=1.02 filterL_1.gain=-3.4 filterL_1.freq=57.4 filterL_1.q=4.91 filterL_2.gain=5.8 filterL_2.freq=81.1 filterL_2.q=5.07 filterL_3.gain=-14.2 filterL_4.gain=4.8 filterL_4.freq=121.1 filterL_5.gain=-6.3 filterL_5.freq=135.9 filterL_5.q=5.0 filterL_6.gain=-7.4 filterL_6.freq=216.2 filterL_6.q=1.0 filterL_7.gain=6.1 filterL_7.freq=206.3 filterL_8.gain=-7.8 filterL_8.freq=184.9 filterR_0.gain=5.0 filterR_0.freq=76.8 filterR_0.q=5.12 filterR_01.gain=4.0 filterR_01.freq=60.9 filterR_01.q=5.1 filterR_1.gain=-3.1 filterR_2.gain=-3.5 filterR_2.freq=216.5 kick.gain=-9.1 kick.freq=106.5 kick.q=5.36 kick_body_L.gain=4.8 kick_body_L.freq=73.0 kick_body_R.gain=5.8 kick_body_R.freq=77.3 kick_fill_R.gain=6.0 kick_fill_R.freq=46.7 kick_fill_R.q=1.86 mode50_cut_L.gain=-6.0 mode50_cut_L.freq=55.2 mode50_cut_R.gain=-2.4 mode50_cut_R.freq=56.2

@@ -1,0 +1,235 @@
+<title>Kick à l'oreille</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout : bandeau d'indicateurs avant/après, contrôles collants, trois graphes empilés, tableau */
+:root {
+  --bg: #f7f8f8; --surface: #ffffff; --ink: #121516; --ink-2: #4e5457; --muted: #868c8f;
+  --grid: #e3e6e6; --axis: #c3c8c9; --ring: rgba(18,21,22,.10); --chip: #eef1f1;
+  --src: #868c8f; --s1: #eb6834; --s2: #2a78d6; --s3: #1baf7a; --s4: #6250d6; --s5: #e87ba4;
+  --up: #188038; --down: #c5221f;
+  --f-ui: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-data: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #111314; --surface: #1a1c1d; --ink: #eef0f0; --ink-2: #c0c5c7; --muted: #8b9194;
+  --grid: #2a2d2e; --axis: #3a3e40; --ring: rgba(255,255,255,.10); --chip: #24282a;
+  --src: #8b9194; --s1: #d95926; --s2: #3987e5; --s3: #199e70; --s4: #9085e9; --s5: #d55181;
+  --up: #81c995; --down: #f28b82; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #111314; --surface: #1a1c1d; --ink: #eef0f0; --ink-2: #c0c5c7; --muted: #8b9194;
+  --grid: #2a2d2e; --axis: #3a3e40; --ring: rgba(255,255,255,.10); --chip: #24282a;
+  --src: #8b9194; --s1: #d95926; --s2: #3987e5; --s3: #199e70; --s4: #9085e9; --s5: #d55181;
+  --up: #81c995; --down: #f28b82; color-scheme: dark }
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+body { background: var(--bg); color: var(--ink); font-family: var(--f-ui); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 1040px; margin: 0 auto; padding-block: 28px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 24px; }
+header { display: grid; gap: 6px; }
+h1 { font-size: 26px; font-weight: 600; letter-spacing: -.01em; margin: 0; text-wrap: balance; }
+.sub { color: var(--ink-2); margin: 0; max-width: 70ch; }
+h2 { font-size: 17px; font-weight: 600; margin: 0; text-wrap: balance; }
+.eyebrow { font: 500 11px var(--f-data); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+.tile { background: var(--surface); border-radius: 10px; box-shadow: 0 0 0 1px var(--ring); padding: 14px 16px; display: grid; gap: 2px; min-width: 0; }
+.tile .k { font-size: 13px; color: var(--ink-2); }
+.tile .v { font: 500 22px var(--f-data); font-variant-numeric: tabular-nums; }
+.tile .d { font: 500 12px var(--f-data); display: inline-flex; gap: 6px; align-items: center; }
+.tile .d.up { color: var(--up); } .tile .d.down { color: var(--down); } .tile .d.eq { color: var(--muted); }
+.tile .h { font-size: 12px; color: var(--muted); }
+.controls { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; position: sticky; top: env(safe-area-inset-top, 0px);
+  background: var(--bg); padding-block: 10px; z-index: 5; border-bottom: 1px solid var(--grid); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.seg { display: inline-flex; background: var(--chip); border-radius: 8px; padding: 3px; gap: 2px; }
+.seg button { border: 0; background: transparent; color: var(--ink-2); font: 500 13px var(--f-ui); padding: 6px 12px; border-radius: 6px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 0 0 1px var(--ring); }
+button:focus-visible { outline: 2px solid var(--s2); outline-offset: 2px; }
+.lg { display: flex; flex-wrap: wrap; gap: 6px 14px; }
+.lg button { display: inline-flex; align-items: center; gap: 8px; border: 0; background: none; color: var(--ink-2); font: 500 13px var(--f-ui); cursor: pointer; padding: 2px 0; }
+.lg button[aria-pressed="false"] { opacity: .4; }
+.lg i { width: 16px; height: 3px; border-radius: 2px; display: inline-block; }
+.card { background: var(--surface); border-radius: 12px; box-shadow: 0 0 0 1px var(--ring); padding: 18px 18px 12px; display: grid; gap: 10px; min-width: 0; }
+.note { font-size: 13px; color: var(--muted); margin: 0; max-width: 74ch; }
+.plot { position: relative; width: 100%; }
+.plot svg { display: block; width: 100%; height: auto; overflow: visible; }
+.plot text { font: 11px var(--f-data); fill: var(--muted); font-variant-numeric: tabular-nums; }
+.tip { position: absolute; pointer-events: none; background: var(--surface); color: var(--ink); border-radius: 8px;
+  box-shadow: 0 0 0 1px var(--ring), 0 4px 14px rgba(0,0,0,.12); padding: 8px 10px; font: 12px var(--f-data); min-width: 160px; z-index: 3; }
+.tip .f { font-weight: 500; margin-bottom: 4px; }
+.tip .r { display: flex; justify-content: space-between; gap: 14px; color: var(--ink-2); }
+.tip .r span:first-child { display: inline-flex; align-items: center; gap: 6px; }
+.tip i { width: 10px; height: 3px; border-radius: 2px; display: inline-block; }
+.tbl { overflow-x: auto; }
+table { border-collapse: collapse; font: 13px var(--f-data); font-variant-numeric: tabular-nums; width: 100%; }
+th, td { padding: 6px 10px; text-align: right; border-bottom: 1px solid var(--grid); white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; font-family: var(--f-ui); }
+th { color: var(--muted); font-weight: 500; font-family: var(--f-ui); }
+.empty { color: var(--muted); font-size: 13px; }
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Kick de test · position d'écoute · simulé à partir des réponses mesurées au micro</span>
+    <h1>Kick à l'oreille</h1>
+    <p class="sub">Le même kick (le fichier de test : note qui descend de 150 à 55 Hz et clic de 4 ms), tel qu'il arrive au micro avec chaque réglage. Le clic est la bande 1,5-8 kHz, le corps la bande 40-120 Hz.</p>
+  </header>
+
+  <section aria-labelledby="tt">
+    <h2 id="tt" style="margin-bottom:10px">Coup gauche + droite : <span id="cmpnames"></span></h2>
+    <div class="tiles" id="tiles"></div>
+  </section>
+
+  <div class="controls" role="toolbar" aria-label="Affichage">
+    <div class="seg" id="voie" aria-label="Enceinte">
+      <button type="button" data-v="GD" aria-pressed="true">Gauche + droite</button>
+      <button type="button" data-v="G" aria-pressed="false">Gauche</button>
+      <button type="button" data-v="D" aria-pressed="false">Droite</button>
+    </div>
+    <div class="lg" id="lg"></div>
+  </div>
+
+  <section class="card" aria-labelledby="t1">
+    <h2 id="t1">Le clic, 0 à 60 ms</h2>
+    <div class="plot" id="p1"></div>
+    <p class="note">Niveau de la bande du clic, en dB par rapport au corps du kick. Un clic fort et net = un pic haut au début, qui retombe vite. Ce qui reste après 6 ms vient surtout des réflexions de la pièce.</p>
+  </section>
+
+  <section class="card" aria-labelledby="t2">
+    <h2 id="t2">Le corps, 0 à 400 ms</h2>
+    <div class="plot" id="p2"></div>
+    <p class="note">Enveloppe du grave, 0 dB = son maximum. Plus la courbe monte tôt, plus le corps arrive avec le clic. Au-dessus de la source après le pic = traîne ajoutée par la pièce ; en dessous = corps plus court que le fichier.</p>
+  </section>
+
+  <section class="card" aria-labelledby="t3">
+    <h2 id="t3">Le grave de chaque enceinte</h2>
+    <div class="plot" id="p3"></div>
+    <p class="note">Réponse 30-250 Hz au 1/12 d'octave, 0 dB = moyenne 200 Hz-1 kHz. En mode gauche + droite : la somme des deux enceintes à la position d'écoute.</p>
+  </section>
+
+  <section class="card" aria-labelledby="t4">
+    <h2 id="t4">Tous les indicateurs</h2>
+    <div class="tbl" id="tbl"></div>
+    <p class="note">Clic : énergie du clic par rapport au corps, comparée au fichier (0 = même dosage, plus = clic plus présent). Bavure : énergie de l'aigu de 6 à 40 ms après le clic par rapport au clic (plus bas = plus net ; le fichier est à <span id="srcbav"></span>). Retard : le corps atteint la moitié de son maximum, compté depuis le clic, par rapport au fichier. Traîne : tenue du corps de 60 à 300 ms par rapport au fichier.</p>
+  </section>
+</div>
+
+<script>
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const SLOTS = ["--s1", "--s2", "--s3", "--s4", "--s5"];
+const state = { voie: "GD", hide: {} };
+let D = null;
+const fmt = (v, u, d = 1) => v == null ? "–" : (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(d) + (u ? " " + u : "");
+
+function chart(el, series, o) {
+  const W = 1000, H = o.h || 320, m = { l: 44, r: 14, t: 12, b: 28 }, iw = W - m.l - m.r, ih = H - m.t - m.b;
+  const lx = o.log ? x => m.l + (Math.log10(x) - Math.log10(o.x[0])) / (Math.log10(o.x[1]) - Math.log10(o.x[0])) * iw
+                   : x => m.l + (x - o.x[0]) / (o.x[1] - o.x[0]) * iw;
+  const ly = v => m.t + (o.y[1] - Math.max(o.y[0], Math.min(o.y[1], v))) / (o.y[1] - o.y[0]) * ih;
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${o.label}">`;
+  for (let v = o.y[0]; v <= o.y[1]; v += o.ys) {
+    s += `<line x1="${m.l}" x2="${W - m.r}" y1="${ly(v)}" y2="${ly(v)}" stroke="${css(v === 0 ? "--axis" : "--grid")}"/>`;
+    s += `<text x="${m.l - 8}" y="${ly(v) + 4}" text-anchor="end">${v > 0 ? "+" + v : v}</text>`;
+  }
+  o.xt.forEach((x, k) => {
+    s += `<line x1="${lx(x)}" x2="${lx(x)}" y1="${m.t}" y2="${m.t + ih}" stroke="${css("--grid")}"/>`;
+    s += `<text x="${lx(x)}" y="${H - 8}" text-anchor="${k === 0 ? "start" : k === o.xt.length - 1 ? "end" : "middle"}">${o.xl(x)}</text>`;
+  });
+  const xs = o.xs;
+  series.forEach(se => {
+    if (state.hide[se.key]) return;
+    let d = "", pen = false;
+    se.v.forEach((v, i) => {
+      if (v == null || xs[i] < o.x[0] || xs[i] > o.x[1]) { pen = false; return; }
+      d += (pen ? "L" : "M") + lx(xs[i]).toFixed(1) + " " + ly(v).toFixed(1); pen = true;
+    });
+    s += `<path d="${d}" fill="none" stroke="${se.c}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"${se.dash ? ' stroke-dasharray="6 4"' : ""}/>`;
+  });
+  s += `<line class="xh" y1="${m.t}" y2="${m.t + ih}" stroke="${css("--muted")}" visibility="hidden"/><g class="dots"></g></svg><div class="tip" hidden></div>`;
+  el.innerHTML = s;
+  const svg = el.querySelector("svg"), tip = el.querySelector(".tip"), xh = el.querySelector(".xh"), dots = el.querySelector(".dots");
+  svg.addEventListener("pointermove", ev => {
+    const r = svg.getBoundingClientRect(), X = (ev.clientX - r.left) / r.width * W;
+    let i = 0, best = 1e9;
+    xs.forEach((x, k) => { if (x < o.x[0] || x > o.x[1]) return; const dd = Math.abs(lx(x) - X); if (dd < best) { best = dd; i = k; } });
+    const px = lx(xs[i]);
+    xh.setAttribute("x1", px); xh.setAttribute("x2", px); xh.setAttribute("visibility", "visible");
+    let rows = "", dd = "";
+    series.forEach(se => { if (state.hide[se.key] || se.v[i] == null) return;
+      dd += `<circle cx="${px}" cy="${ly(se.v[i])}" r="4" fill="${se.c}" stroke="${css("--surface")}" stroke-width="2"/>`;
+      rows += `<div class="r"><span><i style="background:${se.c}"></i>${se.name}</span><span>${fmt(se.v[i], "dB")}</span></div>`; });
+    dots.innerHTML = dd; tip.innerHTML = `<div class="f">${o.xl(xs[i], true)}</div>${rows}`; tip.hidden = false;
+    const p = px / W * r.width, w = tip.offsetWidth;
+    tip.style.left = (p + 14 + w > r.width ? p - 14 - w : p + 14) + "px"; tip.style.top = "8px";
+  });
+  svg.addEventListener("pointerleave", () => { tip.hidden = true; xh.setAttribute("visibility", "hidden"); dots.innerHTML = ""; });
+}
+
+function seriesFor(kind) {
+  const v = state.voie, out = [];
+  if (kind !== "grave") out.push({ key: "src", name: "Fichier source", c: css("--src"), v: D.source[kind], dash: true });
+  D.reglages.forEach((r, k) => {
+    const vals = kind === "grave" ? r.grave[v] : r.types[v][kind];
+    out.push({ key: r.etiquette, name: r.nom, c: css(SLOTS[Math.min(k, SLOTS.length - 1)]), v: vals });
+  });
+  return out;
+}
+
+function legend() {
+  const items = [{ key: "src", name: "Fichier source", c: css("--src"), dash: true }]
+    .concat(D.reglages.map((r, k) => ({ key: r.etiquette, name: r.nom, c: css(SLOTS[Math.min(k, SLOTS.length - 1)]) })));
+  const el = document.getElementById("lg");
+  el.innerHTML = items.map(s => `<button type="button" data-k="${s.key}" aria-pressed="${!state.hide[s.key]}"><i style="background:${s.dash ? "repeating-linear-gradient(90deg," + s.c + " 0 5px,transparent 5px 8px)" : s.c}"></i>${s.name}</button>`).join("");
+  el.querySelectorAll("button").forEach(b => b.onclick = () => { state.hide[b.dataset.k] = !state.hide[b.dataset.k]; render(); });
+}
+
+function tiles() {
+  const a = D.reglages[0], b = D.reglages[D.reglages.length - 1];
+  document.getElementById("cmpnames").textContent = `${a.nom} → ${b.nom}`;
+  const defs = [
+    { k: "clic_rel_db", n: "Force du clic", u: "dB", better: +1, h: "par rapport au corps, 0 = comme le fichier" },
+    { k: "bavure_db", n: "Netteté du clic (bavure)", u: "dB", better: -1, h: "aigu qui traîne après le clic" },
+    { k: "corps_retard_ms", n: "Retard du corps", u: "ms", better: -1, h: "le grave arrive après le clic" },
+    { k: "traine_db", n: "Tenue du corps", u: "dB", better: 0, h: "0 = comme le fichier" },
+  ];
+  document.getElementById("tiles").innerHTML = defs.map(d => {
+    const va = a.types.GD[d.k], vb = b.types.GD[d.k], diff = vb - va;
+    const good = d.better === 0 ? Math.abs(vb) < Math.abs(va) : diff * d.better > 0;
+    const cls = Math.abs(diff) < (d.u === "ms" ? 0.3 : 0.3) ? "eq" : good ? "up" : "down";
+    const word = cls === "eq" ? "stable" : good ? "mieux" : "moins bien";
+    return `<div class="tile"><span class="k">${d.n}</span><span class="v">${fmt(vb, d.u)}</span>
+      <span class="d ${cls}">${fmt(diff, d.u)} · ${word}</span><span class="h">${d.h} · avant ${fmt(va, d.u)}</span></div>`;
+  }).join("");
+}
+
+function table() {
+  const cols = [["clic_rel_db", "Clic", "dB"], ["bavure_db", "Bavure", "dB"], ["corps_retard_ms", "Retard", "ms"], ["traine_db", "Traîne", "dB"]];
+  let t = `<table><thead><tr><th>Réglage</th><th>Enceinte</th>${cols.map(c => `<th>${c[1]}</th>`).join("")}<th>Écart G−D</th></tr></thead><tbody>`;
+  D.reglages.forEach(r => ["GD", "G", "D"].forEach((v, k) => {
+    t += `<tr><td>${k === 0 ? r.nom : ""}</td><td style="text-align:left">${{ GD: "G + D", G: "Gauche", D: "Droite" }[v]}</td>`
+      + cols.map(c => `<td>${fmt(r.types[v][c[0]], c[2], 2)}</td>`).join("")
+      + `<td>${k === 0 ? fmt(r.ecart_GD_ms, "ms", 3) : ""}</td></tr>`;
+  }));
+  document.getElementById("tbl").innerHTML = t + "</tbody></table>";
+}
+
+function render() {
+  legend();
+  const t = D.t_ms;
+  chart(document.getElementById("p1"), seriesFor("clic"), { x: [0, 60], xs: t, xt: [0, 10, 20, 30, 40, 50, 60], xl: (x, tip) => (tip ? x.toFixed(1) : x) + " ms", y: [-60, 0], ys: 10, label: "Enveloppe du clic" });
+  chart(document.getElementById("p2"), seriesFor("corps"), { x: [0, 400], xs: t, xt: [0, 50, 100, 150, 200, 250, 300, 350, 400], xl: (x, tip) => (tip ? x.toFixed(0) : x) + " ms", y: [-40, 0], ys: 10, label: "Enveloppe du corps" });
+  chart(document.getElementById("p3"), seriesFor("grave"), { log: true, x: [30, 250], xs: D.reglages[0].grave.f, xt: [30, 50, 70, 100, 150, 200, 250], xl: (x, tip) => Math.round(x) + " Hz", y: [-25, 15], ys: 5, h: 300, label: "Grave par enceinte" });
+}
+
+function init() {
+  document.getElementById("srcbav").textContent = fmt(D.source_bavure_db, "dB");
+  document.querySelectorAll("#voie button").forEach(b => b.onclick = () => {
+    state.voie = b.dataset.v; document.querySelectorAll("#voie button").forEach(x => x.setAttribute("aria-pressed", x === b)); render(); });
+  tiles(); table(); render();
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", render);
+  new MutationObserver(render).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+}
+fetch("kick.json").then(r => r.json()).then(d => { D = d; init(); })
+  .catch(() => { document.getElementById("p1").innerHTML = '<p class="empty">Les données du kick (kick.json) n\'ont pas pu être chargées.</p>'; });
+</script>

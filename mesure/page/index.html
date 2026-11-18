@@ -82,7 +82,7 @@ th { color: var(--muted); font-weight: 500; }
   <header>
     <span class="eyebrow">Chaîne CamillaDSP · micro Scarlett 2i2, nouvelle position d'écoute</span>
     <h1>Réponse du salon</h1>
-    <p class="sub">Courbes mesurées au micro, voie par voie, en 1/12 d'octave. Chaque courbe est recalée à 0 dB sur sa moyenne 200 Hz-1 kHz, pour comparer des formes et non des volumes. Notches 42/64 Hz et loudness coupés pendant les mesures.</p>
+    <p class="sub">Courbes mesurées au micro, voie par voie, en 1/12 d'octave. Chaque courbe est recalée à 0 dB sur sa moyenne 200 Hz-1 kHz, pour comparer des formes et non des volumes. Loudness coupé pendant les mesures. Attention : sur cette campagne, les notches 42/64 Hz étaient en fait actifs (−9 dB) alors que l'interface les disait coupés ; c'est corrigé depuis.</p>
   </header>
 
   <section class="facts" id="facts" aria-label="Constats"></section>
@@ -245,7 +245,7 @@ function facts() {
   const k = Object.entries(B.niveaux).map(([l, x]) => x.kick_ms).filter(x => x != null);
   const kmin = Math.round(Math.min(...k)), kmax = Math.round(Math.max(...k));
   const items = [
-    { t: "Vibrations du meuble", tag: ["ok", "Pas de pic à 42 / 64 Hz"], p: "Jusqu'à −14 dB (et à −8 dB, micro saturé), aucune résonance étroite à 42 ou 64 Hz, notches coupés. Les pics restants (54-56 Hz, et 70, 102, 152 Hz à droite) gardent la même taille à tous les volumes : ce sont des modes de la pièce, pas un objet qui vibre. À confirmer à l'oreille, le micro est loin du meuble." },
+    { t: "Vibrations du meuble", tag: ["ok", "Rien qui grandit avec le volume"], p: "Remesuré ensuite avec les notches vraiment coupés : à 42 et 64 Hz, le niveau reste le même à −21 et −14 dB (à 1 dB près). Un objet qui vibre ferait grandir le pic avec le volume. Le +11 dB à 62-66 Hz à droite venait d'un ancien filtre (+16,5 dB), corrigé. À confirmer à l'oreille, le micro est loin du meuble." },
     { t: "Effet du volume", tag: ["ok", "Stable au-dessus de 50 Hz"], p: "De −28 à −14 dB, la forme reste identique à ±0,3 dB de 50 Hz à 16 kHz. Pas besoin d'un réglage par volume au-dessus de 50 Hz : le loudness suffit. Sous 40 Hz, à revoir avec des mesures moyennées." },
     { t: "Gauche / droite", tag: ["w", "Gros écarts à corriger"], p: "À la nouvelle position, la droite est bien plus forte à 63 Hz (11 dB), 100 et 160 Hz (5 à 6 dB) ; la gauche à 200-250 Hz et 2 kHz (près de 3 dB). L'ancien équilibrage était fait pour l'autre position." },
     { t: "Kick", tag: ["ok", `${kmin} à ${kmax} ms`], p: "Chute de −20 dB du grave du kick, constante sur tous les volumes. Nouvelle référence pour cette position du micro." },

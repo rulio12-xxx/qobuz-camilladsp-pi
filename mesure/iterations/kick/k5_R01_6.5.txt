@@ -1,0 +1,4 @@
+delay_L.delay = 0.0
+filterR_01.gain = 6.5
+notch_42.gain = 0.0
+notch_64.gain = 0.0
