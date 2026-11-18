@@ -21,6 +21,13 @@ devices:
     format: S32_LE
 
 filters:
+  phase_grave:
+    type: Conv
+    description: correction de phase du grave (mesure/fir.py, 18/11/2026)
+    parameters:
+      type: Raw
+      filename: /home/rulio12/camilladsp/fir/phase_L.raw
+      format: F32_LE
   notch_42:
     type: Biquad
     parameters:
@@ -403,6 +410,10 @@ pipeline:
       - delay_R
       - loud_bass
       - loud_treble
+  - type: Filter
+    channels: [0, 1]
+    names:
+      - phase_grave
   - type: Filter
     channels: [0, 1]
     names:

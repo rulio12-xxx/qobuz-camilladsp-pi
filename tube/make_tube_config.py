@@ -54,7 +54,8 @@ def main():
                     j += 1
                 else:
                     break
-            branches.append((ch, names))
+            if names:                      # l etape du limiteur seule (ajoutee a la fin) ne donne pas de branche vide
+                branches.append((ch, names))
             i = j
         else:
             i += 1

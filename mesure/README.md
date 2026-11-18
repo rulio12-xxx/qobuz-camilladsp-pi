@@ -122,3 +122,10 @@ bruit de fond a la position d ecoute ; kick2.py reste un controle du corps) :
   global 60 ms, 16384 coefficients ; fichiers fir/phase_L.raw et phase_R.raw
   (copies de ~/camilladsp/fir). Prediction sur k10 : retard du corps G+D
   12,6 -> 6,7 ms. ./variante_fir.py on|off|check|etat pour l essayer en direct.
+- FIR active le 18/11 (k11) : etape phase_grave [0, 1] avant le limiteur dans tous
+  les YAML (sauvegardes *.avant-fir-2026-11-18). Mesure : retard du corps G+D
+  12,6 -> 6,9 ms (ir2), 12,9 -> 5,6 ms (vrai kick) ; CamillaDSP ~10 % CPU.
+  Bouton « Phase grave » dans l interface (etat lu en direct dans CamillaDSP) ;
+  ./variante_fir.py contourne|actif fait la meme chose en ligne de commande.
+  persiste_fir.py ajoute l etape aux YAML. tube/make_tube_config.py corrige
+  (etape vide du limiteur, qui rendait les lampes impossibles a activer).
