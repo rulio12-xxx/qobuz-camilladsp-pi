@@ -1,12 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="-15 -34 262 98" width="1572" height="588" font-family="sans-serif" font-size="2.7">
-<rect x="-15" y="-34" width="262" height="98" fill="#fff"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-15 -34 262 104" width="1572" height="624" font-family="sans-serif" font-size="2.7">
+<rect x="-15" y="-34" width="262" height="104" fill="#fff"/>
 <style>.d{stroke:#06c;stroke-width:.2;fill:none}.t{fill:#06c;text-anchor:middle}.e{stroke:#9bd;stroke-width:.12;stroke-dasharray:1 .8}.c{fill:#fff;stroke:#c00;stroke-width:.4}.l{fill:#000;text-anchor:middle}</style>
 <text x="0" y="-28" font-size="4" font-weight="bold">Façade 230 x 40 mm - ép. 2 mm (cotes en mm)</text>
 <rect x="0" y="0" width="230" height="40" fill="#eef3f6" stroke="#000" stroke-width=".5"/>
 <rect class="c" x="18" y="6" width="55" height="20"/>
 <rect class="c" x="149.5" y="4" width="55" height="20"/>
 <rect class="c" x="83" y="15" width="10" height="10"/>
-<circle class="c" cx="105" cy="20" r="6"/><circle class="c" cx="88" cy="31" r="1.5"/>
+<circle class="c" cx="105" cy="20" r="6"/><circle class="c" cx="5" cy="13" r="1.5"/><circle class="c" cx="5" cy="27" r="1.5"/><circle class="c" cx="225" cy="13" r="1.5"/><circle class="c" cx="225" cy="27" r="1.5"/><circle class="c" cx="88" cy="31" r="1.5"/>
 <rect class="c" x="209.5" y="14" width="5" height="12"/>
 <circle class="c" cx="212" cy="10" r="1.5"/><circle class="c" cx="212" cy="30" r="1.5"/>
 <text class="l" x="45.5" y="17">A - Raspberry Pi 55 x 20</text>
@@ -65,14 +65,11 @@
 <path class="d" d="M140 24V40M139 24H141M139 40H141"/>
 <text class="t" x="141.2" y="32.9" text-anchor="start" style="text-anchor:start" font-size="2.4">16</text>
 <path class="d" d="M80 25V31M79 25H81M79 31H81"/><text class="t" x="81.2" y="28.9" style="text-anchor:start" font-size="2.4">6</text>
+<path class="d" d="M0 8H5M0 7V9M5 7V9"/><text class="t" x="2.5" y="6.3" font-size="2.4">5</text>
+<path class="d" d="M9 13V27M8 13H10M8 27H10"/><text class="t" x="10.2" y="20.9" style="text-anchor:start" font-size="2.4">14</text>
 <path class="d" d="M218 10V30M217 10H219M217 30H219"/><text class="t" x="219.2" y="20.9" style="text-anchor:start" font-size="2.4">20</text>
-<path class="d" d="M225 0V14M224 0H226M224 14H226"/>
-<text class="t" x="226.2" y="7.9" text-anchor="start" style="text-anchor:start" font-size="2.4">14</text>
-<path class="d" d="M225 14V26M224 14H226M224 26H226"/>
-<text class="t" x="226.2" y="20.9" text-anchor="start" style="text-anchor:start" font-size="2.4">12</text>
-<path class="d" d="M225 26V40M224 26H226M224 40H226"/>
-<text class="t" x="226.2" y="33.9" text-anchor="start" style="text-anchor:start" font-size="2.4">14</text>
 <text x="0" y="50" font-size="2.8">Fente : centre à 18 mm du bord droit. 2 perçages Ø3 alignés sur la fente, entraxe 20 mm.</text>
 <text x="0" y="55" font-size="2.8">Optique à 83 mm du bord (10 mm après A), trou de fixation Ø3 à 6 mm sous le carré (à confirmer).</text>
 <text x="0" y="60" font-size="2.8">A à 6 mm du bord haut, B à 4 mm ; B à 5 mm de la fente. Optique et RCA centrés en hauteur (20 mm).</text>
+<text x="0" y="65" font-size="2.8">4 trous de fixation Ø3 : centre à 5 mm du bord court, à ±7 mm de l'axe (entraxe 14 mm), symétriques gauche/droite.</text>
 </svg>
