@@ -188,13 +188,17 @@ def qobuz_volume():
     return None
 
 
+KICK_R_SUR_L = 77.3 / 73.0   # rapport des frequences kick_body D/G dans les YAML
+
+
 def kick_freq(freq=None):
     """Lit ou regle la frequence du filtre kick_body (L+R), en Hz."""
     code = "from camilladsp import CamillaClient\n"
     code += "c=CamillaClient('127.0.0.1',1234)\nc.connect()\n"
     if freq is not None:
         code += f"c.config.set_value('/filters/kick_body_L/parameters/freq', {freq})\n"
-        code += f"c.config.set_value('/filters/kick_body_R/parameters/freq', {freq})\n"
+        # la droite garde son ecart optimise (77,3 Hz pour 73 Hz a gauche, 18/11)
+        code += f"c.config.set_value('/filters/kick_body_R/parameters/freq', {round(freq * KICK_R_SUR_L, 1)})\n"
     code += "print(c.config.get_value('/filters/kick_body_L/parameters/freq'))\n"
     try:
         r = subprocess.run([VENV_PY, "-c", code], capture_output=True,
