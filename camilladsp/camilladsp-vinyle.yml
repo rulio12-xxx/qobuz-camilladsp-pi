@@ -33,14 +33,14 @@ filters:
     parameters:
       type: Peaking
       freq: 42
-      gain: 0
+      gain: -9
       q: 8.0
   notch_64:
     type: Biquad
     parameters:
       type: Peaking
       freq: 64
-      gain: 0
+      gain: -9
       q: 8.0
   treble_air:
     type: Biquad
@@ -54,21 +54,21 @@ filters:
     parameters:
       type: Peaking
       freq: 73
-      gain: 4.8
+      gain: 7.8
       q: 0.82
   kick_body_R:
     type: Biquad
     parameters:
       type: Peaking
       freq: 77.3
-      gain: 5.8
+      gain: 8.8
       q: 5
   click_boost:
     type: Biquad
     parameters:
       type: Peaking
       freq: 4500
-      gain: 3.2
+      gain: 2.2
       q: 1.02
   mode50_cut_R:
     type: Biquad
@@ -120,7 +120,7 @@ filters:
   preamp:
     type: Gain
     parameters:
-      gain: -17.5
+      gain: -16.5
   limiter:
     type: Limiter
     parameters:

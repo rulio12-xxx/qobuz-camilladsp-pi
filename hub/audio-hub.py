@@ -218,23 +218,27 @@ def set_loud(on):
         os.remove(LOUD_FLAG)
 
 
-KICKBODY_FLAG = "/home/rulio12/kickbody/enabled"
-KICKBODY_GAIN_L = 4.8  # 18/11 : optimisation kick (mesure/optim_kick.py)
-KICKBODY_GAIN_R = 5.8
+# 18/11 : le reglage de base (dans les YAML) est deja le kick « normal » ;
+# le bouton ajoute un renfort par-dessus. Etat lu en direct dans CamillaDSP.
+KICKBODY_BASE_L = 4.8   # = kick_body_L dans les YAML (mesure/optim_kick.py)
+KICKBODY_BASE_R = 5.8   # = kick_body_R dans les YAML
+KICKBODY_BOOST = 3.0    # renfort quand le bouton Kick est allume
 
 
 def kickbody_enabled():
-    return os.path.exists(KICKBODY_FLAG)
+    code = ("from camilladsp import CamillaClient\n"
+            "c = CamillaClient('127.0.0.1', 1234)\nc.connect()\n"
+            "print(c.config.active()['filters']['kick_body_L']['parameters']['gain'])\n")
+    try:
+        r = subprocess.run([VENV_PY, "-c", code], capture_output=True, text=True, timeout=5)
+        return float(r.stdout.strip()) > KICKBODY_BASE_L + KICKBODY_BOOST / 2
+    except Exception:
+        return False
 
 
 def set_kickbody(on):
-    os.makedirs(os.path.dirname(KICKBODY_FLAG), exist_ok=True)
-    if on:
-        open(KICKBODY_FLAG, "w").close()
-    elif os.path.exists(KICKBODY_FLAG):
-        os.remove(KICKBODY_FLAG)
-    gain_l = KICKBODY_GAIN_L if on else 0.0
-    gain_r = KICKBODY_GAIN_R if on else 0.0
+    gain_l = KICKBODY_BASE_L + (KICKBODY_BOOST if on else 0.0)
+    gain_r = KICKBODY_BASE_R + (KICKBODY_BOOST if on else 0.0)
     code = ("from camilladsp import CamillaClient\n"
             "c = CamillaClient('127.0.0.1', 1234)\n"
             "c.connect()\n"
@@ -513,7 +517,7 @@ async function refresh(){
     document.getElementById('loudToggle').classList.toggle('sel', !!s.loud);
     document.getElementById('loudToggle').textContent='Loudness '+(s.loud?'On':'Off');
     document.getElementById('kbToggle').classList.toggle('sel', !!s.kickbody);
-    document.getElementById('kbToggle').textContent='Kick '+(s.kickbody?'On':'Off');
+    document.getElementById('kbToggle').textContent='Kick '+(s.kickbody?'renforce':'normal');
     document.getElementById('notchToggle').classList.toggle('sel', !!s.notch);
     document.getElementById('notchToggle').textContent='Notch 42/64Hz '+(s.notch?'On':'Off');
     {const b=document.getElementById('phaseToggle');b.classList.toggle('sel',s.phase===true);
