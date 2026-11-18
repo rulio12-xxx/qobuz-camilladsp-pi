@@ -1,0 +1,10 @@
+{
+  "mode50_cut_L": -10.0,
+  "mode50_cut_R": -10.0,
+  "filterR_01": 6.0,
+  "filterL_2": 2.0,
+  "kick_fill_R": 5.0,
+  "kick_body_L": 3.0,
+  "filterL_6": -10.0,
+  "filterR_1": -3.0
+}

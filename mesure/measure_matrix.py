@@ -20,9 +20,9 @@ from sweep_dsp import (generate_log_sweep, write_wav, read_wav_mono,
                         deconvolve, band_average_db, analyze_tone, find_offset)
 
 MUSIC_DIR = "/home/rulio12/musique"
-RESULTS_DIR = "/home/rulio12/bassmeasure/matrix_results"
+RESULTS_DIR = "/home/rulio12/audiohub/mesure/matrix_results"
 FS = 44100
-DEVICE = "hw:3,0"
+DEVICE = "hw:USB,0"
 MIC_CHANNEL = 0  # Scarlett entree 1
 
 SWEEP_DUR = 8.0

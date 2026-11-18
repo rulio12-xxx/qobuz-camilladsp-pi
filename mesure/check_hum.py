@@ -4,7 +4,7 @@ from sweep_dsp import read_wav_mono
 
 FS = 44100
 DUR = 6
-DEVICE = "hw:3,0"
+DEVICE = "hw:USB,0"
 REC = "/tmp/ambient_check.wav"
 
 subprocess.run(["arecord", "-D", DEVICE, "-f", "S32_LE", "-r", str(FS),

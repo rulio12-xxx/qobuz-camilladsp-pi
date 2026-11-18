@@ -12,7 +12,7 @@ from sweep_dsp import generate_log_sweep, write_wav
 
 MUSIC_DIR = "/home/rulio12/musique"
 FILENAME = "mesure_tones.wav"
-MANIFEST = "/home/rulio12/bassmeasure/tones_manifest.json"
+MANIFEST = "/home/rulio12/audiohub/mesure/tones_manifest.json"
 
 FADE_S = 0.015
 GAP_S = 0.25

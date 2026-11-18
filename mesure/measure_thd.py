@@ -17,7 +17,7 @@ from sweep_dsp import read_wav_mono, generate_log_sweep, find_offset, analyze_to
 
 MUSIC_DIR = "/home/rulio12/musique"
 FILENAME = "mesure_tones.wav"
-MANIFEST = "/home/rulio12/bassmeasure/tones_manifest.json"
+MANIFEST = "/home/rulio12/audiohub/mesure/tones_manifest.json"
 REC_PATH = "/tmp/mesure_thd_rec.wav"
 
 MARKER_F1, MARKER_F2, MARKER_DUR = 500.0, 3000.0, 0.2
@@ -35,7 +35,7 @@ def bar(db, lo=-100, hi=-20, width=30):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--device", default="hw:3,0")
+    ap.add_argument("--device", default="hw:USB,0")
     ap.add_argument("--tail", type=float, default=3.0)
     ap.add_argument("--rate", type=int, default=44100)
     ap.add_argument("--prime-seconds", type=float, default=3.5)
@@ -103,7 +103,7 @@ def main():
     worst = max(results, key=lambda r: r["thdn_pct"])
     print(f"\nPire THD+N : {worst['thdn_pct']:.3f}% ({worst['thdn_db']:+.1f} dB) a {worst['f0_nominal']:.0f} Hz")
 
-    out_path = "/home/rulio12/bassmeasure/last_thd_results.json"
+    out_path = "/home/rulio12/audiohub/mesure/last_thd_results.json"
     with open(out_path, "w") as f:
         json.dump(results, f, indent=2)
     print(f"Resultats complets : {out_path}")

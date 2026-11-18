@@ -1,6 +1,6 @@
 import json
 
-with open("/home/rulio12/bassmeasure/matrix_results/matrix_results.json") as f:
+with open("/home/rulio12/audiohub/mesure/matrix_results/matrix_results.json") as f:
     data = json.load(f)
 
 LEVELS = [-40, -25, -15, -5, 0]

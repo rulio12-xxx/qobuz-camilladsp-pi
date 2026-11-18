@@ -22,7 +22,7 @@ from sweep_dsp import (generate_log_sweep, write_wav, read_wav_mono,
 MUSIC_DIR = "/home/rulio12/musique"
 FS = 44100
 SWEEP_DUR = 8.0
-DEVICE = "hw:3,0"
+DEVICE = "hw:USB,0"
 MIC_CHANNEL = 0
 VENV_PY = "/home/rulio12/audio-power/venv/bin/python3"
 
@@ -32,7 +32,7 @@ CONDITIONS = ["R", "L", "RL"]
 DELAY_FREQS = [470, 5000, 10000]
 BANDS = [40, 50, 63, 80, 100, 125, 160, 200, 500, 1000]
 
-RESULTS_PATH = "/home/rulio12/bassmeasure/iterate_delay_results.json"
+RESULTS_PATH = "/home/rulio12/audiohub/mesure/iterate_delay_results.json"
 
 
 def mpc(*a):

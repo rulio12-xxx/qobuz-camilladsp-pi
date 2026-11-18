@@ -6,7 +6,7 @@ from sweep_dsp import generate_log_sweep, read_wav_mono, deconvolve, band_averag
 MUSIC_DIR = "/home/rulio12/musique"
 FS = 44100
 SWEEP_DUR = 8.0
-DEVICE = "hw:3,0"
+DEVICE = "hw:USB,0"
 MIC_CHANNEL = 0
 BANDS = [40, 50, 63, 80, 100, 125, 160, 200, 500, 1000]
 

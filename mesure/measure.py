@@ -44,7 +44,7 @@ def bar(db, lo=-30, hi=6, width=40):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--device", default="hw:3,0", help="peripherique ALSA de capture (Scarlett)")
+    ap.add_argument("--device", default="hw:USB,0", help="peripherique ALSA de capture (Scarlett)")
     ap.add_argument("--tail", type=float, default=3.0, help="marge (s) apres la fin du sweep")
     ap.add_argument("--rate", type=int, default=44100)
     ap.add_argument("--channel", type=int, default=0, help="canal du Scarlett ou est le micro (0=entree1)")
