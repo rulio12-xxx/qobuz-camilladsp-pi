@@ -1,0 +1,281 @@
+<title>Réponse du salon</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout : une colonne de mesure, contrôles en une ligne au-dessus des graphes, constats en tête */
+:root {
+  --bg: #f7f8f8; --surface: #ffffff; --ink: #121516; --ink-2: #4e5457; --muted: #868c8f;
+  --grid: #e3e6e6; --axis: #c3c8c9; --ring: rgba(18,21,22,.10); --chip: #eef1f1;
+  --s-brut: #eb6834; --s-old: #2a78d6; --s-new: #1baf7a;
+  --lv1: #86b6ef; --lv2: #5598e7; --lv3: #2a78d6; --lv4: #1c5cab; --lv5: #0d366b;
+  --warn: #b06000; --good: #188038;
+  --f-ui: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-data: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #111314; --surface: #1a1c1d; --ink: #eef0f0; --ink-2: #c0c5c7; --muted: #8b9194;
+  --grid: #2a2d2e; --axis: #3a3e40; --ring: rgba(255,255,255,.10); --chip: #24282a;
+  --s-brut: #d95926; --s-old: #3987e5; --s-new: #199e70;
+  --lv1: #184f95; --lv2: #1c5cab; --lv3: #3987e5; --lv4: #6da7ec; --lv5: #b7d3f6;
+  --warn: #fdd663; --good: #81c995; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #111314; --surface: #1a1c1d; --ink: #eef0f0; --ink-2: #c0c5c7; --muted: #8b9194;
+  --grid: #2a2d2e; --axis: #3a3e40; --ring: rgba(255,255,255,.10); --chip: #24282a;
+  --s-brut: #d95926; --s-old: #3987e5; --s-new: #199e70;
+  --lv1: #184f95; --lv2: #1c5cab; --lv3: #3987e5; --lv4: #6da7ec; --lv5: #b7d3f6;
+  --warn: #fdd663; --good: #81c995; color-scheme: dark }
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+body { background: var(--bg); color: var(--ink); font-family: var(--f-ui); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 1040px; margin: 0 auto; padding-block: 28px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 28px; }
+header { display: grid; gap: 6px; }
+h1 { font-size: 26px; font-weight: 600; letter-spacing: -.01em; margin: 0; text-wrap: balance; }
+.sub { color: var(--ink-2); margin: 0; max-width: 68ch; }
+h2 { font-size: 17px; font-weight: 600; margin: 0; text-wrap: balance; }
+.eyebrow { font: 500 11px var(--f-data); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
+.fact { background: var(--surface); border-radius: 10px; box-shadow: 0 0 0 1px var(--ring); padding: 14px 16px; display: grid; gap: 4px; align-content: start; min-width: 0; }
+.fact b { font-weight: 600; }
+.fact p { margin: 0; color: var(--ink-2); font-size: 14px; }
+.tag { display: inline-flex; align-items: center; gap: 6px; font: 500 12px var(--f-data); }
+.tag.ok { color: var(--good); } .tag.w { color: var(--warn); }
+.tag::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.controls { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; position: sticky; top: env(safe-area-inset-top, 0px);
+  background: var(--bg); padding-block: 10px; z-index: 5; border-bottom: 1px solid var(--grid); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.seg { display: inline-flex; background: var(--chip); border-radius: 8px; padding: 3px; gap: 2px; }
+.seg button { border: 0; background: transparent; color: var(--ink-2); font: 500 13px var(--f-ui); padding: 6px 12px; border-radius: 6px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 0 0 1px var(--ring); }
+.seg button:focus-visible, select:focus-visible, .lg button:focus-visible { outline: 2px solid var(--s-old); outline-offset: 2px; }
+.ctl { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-2); }
+select { font: 500 13px var(--f-ui); background: var(--surface); color: var(--ink); border: 1px solid var(--axis); border-radius: 6px; padding: 5px 8px; }
+.card { background: var(--surface); border-radius: 12px; box-shadow: 0 0 0 1px var(--ring); padding: 18px 18px 12px; display: grid; gap: 10px; min-width: 0; }
+.card .head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 16px; align-items: baseline; }
+.note { font-size: 13px; color: var(--muted); margin: 0; max-width: 72ch; }
+.lg { display: flex; flex-wrap: wrap; gap: 6px 14px; }
+.lg button { display: inline-flex; align-items: center; gap: 8px; border: 0; background: none; color: var(--ink-2); font: 500 13px var(--f-ui); cursor: pointer; padding: 2px 0; }
+.lg button[aria-pressed="false"] { opacity: .4; }
+.lg i { width: 16px; height: 3px; border-radius: 2px; display: inline-block; }
+.lg i.dash { background: repeating-linear-gradient(90deg, currentColor 0 5px, transparent 5px 8px) !important; }
+.plot { position: relative; width: 100%; }
+.plot svg { display: block; width: 100%; height: auto; overflow: visible; }
+.plot text { font: 11px var(--f-data); fill: var(--muted); font-variant-numeric: tabular-nums; }
+.tip { position: absolute; pointer-events: none; background: var(--surface); color: var(--ink); border-radius: 8px;
+  box-shadow: 0 0 0 1px var(--ring), 0 4px 14px rgba(0,0,0,.12); padding: 8px 10px; font: 12px var(--f-data); min-width: 150px; z-index: 3; }
+.tip .f { font-weight: 500; margin-bottom: 4px; }
+.tip .r { display: flex; justify-content: space-between; gap: 14px; color: var(--ink-2); }
+.tip .r span:first-child { display: inline-flex; align-items: center; gap: 6px; }
+.tip i { width: 10px; height: 3px; border-radius: 2px; display: inline-block; }
+details { background: var(--surface); border-radius: 12px; box-shadow: 0 0 0 1px var(--ring); padding: 12px 16px; }
+summary { cursor: pointer; font-weight: 500; }
+.tbl { overflow-x: auto; margin-top: 10px; }
+table { border-collapse: collapse; font: 12px var(--f-data); font-variant-numeric: tabular-nums; }
+th, td { padding: 4px 10px; text-align: right; border-bottom: 1px solid var(--grid); white-space: nowrap; }
+th { color: var(--muted); font-weight: 500; }
+.empty { color: var(--muted); font-size: 13px; }
+@media (prefers-reduced-motion: no-preference) { .plot path.ln { transition: opacity .15s; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Chaîne CamillaDSP · micro Scarlett 2i2, nouvelle position d'écoute</span>
+    <h1>Réponse du salon</h1>
+    <p class="sub">Courbes mesurées au micro, voie par voie, en 1/12 d'octave. Chaque courbe est recalée à 0 dB sur sa moyenne 200 Hz-1 kHz, pour comparer des formes et non des volumes. Notches 42/64 Hz et loudness coupés pendant les mesures.</p>
+  </header>
+
+  <section class="facts" id="facts" aria-label="Constats"></section>
+
+  <div class="controls" role="toolbar" aria-label="Affichage">
+    <div class="seg" id="voie" aria-label="Voie">
+      <button type="button" data-v="L" aria-pressed="true">Gauche</button>
+      <button type="button" data-v="R" aria-pressed="false">Droite</button>
+    </div>
+    <label class="ctl" for="niveau">Volume CamillaDSP
+      <select id="niveau"></select>
+    </label>
+    <label class="ctl" for="nouv" id="nouvWrap">Nouvelle correction
+      <select id="nouv"></select>
+    </label>
+  </div>
+
+  <section class="card" aria-labelledby="t1">
+    <div class="head">
+      <h2 id="t1">Avant / après correction</h2>
+      <div class="lg" id="lg1"></div>
+    </div>
+    <div class="plot" id="p1"></div>
+    <p class="note" id="n1"></p>
+  </section>
+
+  <section class="card" aria-labelledby="t2">
+    <div class="head">
+      <h2 id="t2">Écart gauche − droite</h2>
+      <div class="lg" id="lg2"></div>
+    </div>
+    <div class="plot" id="p2"></div>
+    <p class="note">0 dB = les deux enceintes donnent le même niveau à la position d'écoute. Au-dessus, la gauche est plus forte.</p>
+  </section>
+
+  <section class="card" aria-labelledby="t3">
+    <div class="head">
+      <h2 id="t3">Effet du volume</h2>
+      <div class="lg" id="lg3"></div>
+    </div>
+    <div class="plot" id="p3"></div>
+    <p class="note" id="n3"></p>
+  </section>
+
+  <details>
+    <summary>Tableau des valeurs (voie et volume sélectionnés)</summary>
+    <div class="tbl" id="tbl"></div>
+  </details>
+</div>
+
+<script>
+const F_MIN = 20, F_MAX = 20000;
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const state = { voie: "L", niveau: "-21", nouv: null, hide: {} };
+let D = null;
+
+const fmtF = f => f >= 1000 ? (f / 1000).toFixed(f >= 10000 ? 0 : 1).replace(".0", "") + " kHz" : Math.round(f) + " Hz";
+const fmtDb = v => v == null ? "–" : (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(1) + " dB";
+
+function chart(el, series, opt) {
+  const W = 1000, H = opt.h || 380, m = { l: 44, r: 14, t: 12, b: 28 };
+  const iw = W - m.l - m.r, ih = H - m.t - m.b;
+  const lx = f => m.l + (Math.log10(f) - Math.log10(F_MIN)) / (Math.log10(F_MAX) - Math.log10(F_MIN)) * iw;
+  const [y0, y1] = opt.y;
+  const ly = v => m.t + (y1 - Math.max(y0, Math.min(y1, v))) / (y1 - y0) * ih;
+  const fx = D.freqs;
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${opt.label}">`;
+  for (let v = y0; v <= y1; v += opt.step) {
+    s += `<line x1="${m.l}" x2="${W - m.r}" y1="${ly(v)}" y2="${ly(v)}" stroke="${v === 0 ? css("--axis") : css("--grid")}" stroke-width="1"/>`;
+    s += `<text x="${m.l - 8}" y="${ly(v) + 4}" text-anchor="end">${v > 0 ? "+" + v : v}</text>`;
+  }
+  [20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000].forEach(f => {
+    s += `<line x1="${lx(f)}" x2="${lx(f)}" y1="${m.t}" y2="${m.t + ih}" stroke="${css("--grid")}" stroke-width="1"/>`;
+    s += `<text x="${lx(f)}" y="${H - 8}" text-anchor="${f === 20 ? "start" : f === 20000 ? "end" : "middle"}">${f >= 1000 ? f / 1000 + "k" : f}</text>`;
+  });
+  s += `<text x="${m.l - 8}" y="${m.t - 2}" text-anchor="end">dB</text>`;
+  series.forEach(se => {
+    if (state.hide[se.key]) return;
+    let d = "", pen = false;
+    se.v.forEach((v, i) => {
+      if (v == null) { pen = false; return; }
+      d += (pen ? "L" : "M") + lx(fx[i]).toFixed(1) + " " + ly(v).toFixed(1); pen = true;
+    });
+    s += `<path class="ln" d="${d}" fill="none" stroke="${se.c}" stroke-width="${se.w || 2}" stroke-linejoin="round" stroke-linecap="round"${se.dash ? ' stroke-dasharray="6 4"' : ""}/>`;
+  });
+  s += `<line class="xh" x1="0" x2="0" y1="${m.t}" y2="${m.t + ih}" stroke="${css("--muted")}" stroke-width="1" visibility="hidden"/>`;
+  s += `<g class="dots"></g><rect x="${m.l}" y="${m.t}" width="${iw}" height="${ih}" fill="transparent" class="hit"/></svg><div class="tip" hidden></div>`;
+  el.innerHTML = s;
+  const svg = el.querySelector("svg"), tip = el.querySelector(".tip"), xh = el.querySelector(".xh"), dots = el.querySelector(".dots");
+  const move = ev => {
+    const r = svg.getBoundingClientRect(), x = (ev.clientX - r.left) / r.width * W;
+    const lf = Math.log10(F_MIN) + (x - m.l) / iw * (Math.log10(F_MAX) - Math.log10(F_MIN));
+    let i = 0, best = 1e9;
+    fx.forEach((f, k) => { const dd = Math.abs(Math.log10(f) - lf); if (dd < best) { best = dd; i = k; } });
+    const X = lx(fx[i]);
+    xh.setAttribute("x1", X); xh.setAttribute("x2", X); xh.setAttribute("visibility", "visible");
+    let rows = "", dd = "";
+    series.forEach(se => {
+      if (state.hide[se.key] || se.v[i] == null) return;
+      dd += `<circle cx="${X}" cy="${ly(se.v[i])}" r="4" fill="${se.c}" stroke="${css("--surface")}" stroke-width="2"/>`;
+      rows += `<div class="r"><span><i style="background:${se.c}"></i>${se.name}</span><span>${fmtDb(se.v[i])}</span></div>`;
+    });
+    dots.innerHTML = dd;
+    tip.innerHTML = `<div class="f">${fmtF(fx[i])}</div>${rows}`;
+    tip.hidden = false;
+    const px = X / W * r.width, pw = tip.offsetWidth;
+    tip.style.left = (px + 14 + pw > r.width ? px - 14 - pw : px + 14) + "px";
+    tip.style.top = "8px";
+  };
+  svg.addEventListener("pointermove", move);
+  svg.addEventListener("pointerleave", () => { tip.hidden = true; xh.setAttribute("visibility", "hidden"); dots.innerHTML = ""; });
+}
+
+function legend(el, series) {
+  el.innerHTML = series.map(se => `<button type="button" data-k="${se.key}" aria-pressed="${!state.hide[se.key]}" style="color:${se.c}"><i class="${se.dash ? "dash" : ""}" style="background:${se.c}"></i><span style="color:var(--ink-2)">${se.name}</span></button>`).join("");
+  el.querySelectorAll("button").forEach(b => b.onclick = () => { state.hide[b.dataset.k] = !state.hide[b.dataset.k]; render(); });
+}
+
+const base = () => D.campagnes[0];
+const nouvelle = () => D.campagnes.length > 1 ? D.campagnes.find(c => c.etiquette === state.nouv) || D.campagnes[D.campagnes.length - 1] : null;
+const sub = (a, b) => a.map((v, i) => v == null || b[i] == null ? null : +(v - b[i]).toFixed(2));
+
+function render() {
+  const v = state.voie, n = state.niveau, B = base().niveaux[n], N = nouvelle() && nouvelle().niveaux[n];
+  const s1 = [
+    { key: "brut", name: "Sans correction", c: css("--s-brut"), v: B[v].brut, dash: true },
+    { key: "old", name: "Ancienne correction", c: css("--s-old"), v: B[v].mesure },
+  ];
+  if (N) s1.push({ key: "new", name: "Nouvelle correction", c: css("--s-new"), v: N[v].mesure });
+  legend(document.getElementById("lg1"), s1);
+  chart(document.getElementById("p1"), s1, { y: [-30, 15], step: 5, label: "Réponse en fréquence" });
+  const sat = Math.max(B.L.pic_micro, B.R.pic_micro) > -1;
+  document.getElementById("n1").textContent = (N ? "" : "La nouvelle correction apparaîtra ici dès la première itération mesurée. ")
+    + "« Sans correction » est calculé : la mesure moins l'effet exact des filtres CamillaDSP de la voie."
+    + (sat ? " Attention : à ce volume le micro a saturé, la mesure n'est pas fiable." : "");
+
+  const s2 = [{ key: "lr_old", name: "Ancienne correction", c: css("--s-old"), v: sub(B.L.mesure, B.R.mesure) },
+              { key: "lr_brut", name: "Sans correction", c: css("--s-brut"), v: sub(B.L.brut, B.R.brut), dash: true }];
+  if (N) s2.push({ key: "lr_new", name: "Nouvelle correction", c: css("--s-new"), v: sub(N.L.mesure, N.R.mesure) });
+  legend(document.getElementById("lg2"), s2);
+  chart(document.getElementById("p2"), s2, { y: [-15, 15], step: 5, h: 300, label: "Écart gauche moins droite" });
+
+  const C = N ? nouvelle() : base(), ref = C.niveaux["-21"] || C.niveaux[n];
+  const lvs = Object.keys(C.niveaux).sort((a, b) => a - b);
+  const cols = ["--lv1", "--lv2", "--lv3", "--lv4", "--lv5"];
+  const s3 = lvs.map((l, k) => ({ key: "lv" + l, name: l + " dB" + (Math.max(C.niveaux[l].L.pic_micro, C.niveaux[l].R.pic_micro) > -1 ? " (saturé)" : ""),
+    c: css(cols[Math.min(k, cols.length - 1)]), v: sub(C.niveaux[l][v].mesure, ref[v].mesure), dash: Math.max(C.niveaux[l].L.pic_micro, C.niveaux[l].R.pic_micro) > -1 }));
+  legend(document.getElementById("lg3"), s3);
+  chart(document.getElementById("p3"), s3, { y: [-10, 20], step: 5, h: 300, label: "Différence de forme selon le volume" });
+  document.getElementById("n3").textContent = `${N ? "Nouvelle" : "Ancienne"} correction, voie ${v === "L" ? "gauche" : "droite"} : chaque volume comparé à −21 dB, écart de volume retiré. Une ligne plate à 0 = même équilibre tonal quel que soit le volume. Sous 50 Hz aux faibles volumes, la remontée vient surtout du bruit de fond de la pièce capté par le micro.`;
+
+  const rowsF = D.freqs.map((f, i) => i).filter(i => i % 2 === 0);
+  let t = `<table><thead><tr><th>Fréquence</th><th>Sans correction</th><th>Ancienne</th>${N ? "<th>Nouvelle</th>" : ""}<th>G − D (anc.)</th></tr></thead><tbody>`;
+  rowsF.forEach(i => { t += `<tr><td>${fmtF(D.freqs[i])}</td><td>${fmtDb(B[v].brut[i])}</td><td>${fmtDb(B[v].mesure[i])}</td>${N ? `<td>${fmtDb(N[v].mesure[i])}</td>` : ""}<td>${fmtDb(s2[0].v[i])}</td></tr>`; });
+  document.getElementById("tbl").innerHTML = t + "</tbody></table>";
+}
+
+function facts() {
+  const B = base();
+  const k = Object.entries(B.niveaux).map(([l, x]) => x.kick_ms).filter(x => x != null);
+  const kmin = Math.round(Math.min(...k)), kmax = Math.round(Math.max(...k));
+  const items = [
+    { t: "Vibrations du meuble", tag: ["ok", "Pas de pic à 42 / 64 Hz"], p: "Jusqu'à −14 dB (et à −8 dB, micro saturé), aucune résonance étroite à 42 ou 64 Hz, notches coupés. Les pics restants (54-56 Hz, et 70, 102, 152 Hz à droite) gardent la même taille à tous les volumes : ce sont des modes de la pièce, pas un objet qui vibre. À confirmer à l'oreille, le micro est loin du meuble." },
+    { t: "Effet du volume", tag: ["ok", "Stable au-dessus de 50 Hz"], p: "De −28 à −14 dB, la forme reste identique à ±0,3 dB de 50 Hz à 16 kHz. Pas besoin d'un réglage par volume au-dessus de 50 Hz : le loudness suffit. Sous 40 Hz, à revoir avec des mesures moyennées." },
+    { t: "Gauche / droite", tag: ["w", "Gros écarts à corriger"], p: "À la nouvelle position, la droite est bien plus forte à 63 Hz (11 dB), 100 et 160 Hz (5 à 6 dB) ; la gauche à 200-250 Hz et 2 kHz (près de 3 dB). L'ancien équilibrage était fait pour l'autre position." },
+    { t: "Kick", tag: ["ok", `${kmin} à ${kmax} ms`], p: "Chute de −20 dB du grave du kick, constante sur tous les volumes. Nouvelle référence pour cette position du micro." },
+  ];
+  document.getElementById("facts").innerHTML = items.map(x => `<div class="fact"><b>${x.t}</b><span class="tag ${x.tag[0]}">${x.tag[1]}</span><p>${x.p}</p></div>`).join("");
+}
+
+function init() {
+  const sel = document.getElementById("niveau");
+  const lvs = Object.keys(base().niveaux).sort((a, b) => a - b);
+  sel.innerHTML = lvs.map(l => { const x = base().niveaux[l], s = Math.max(x.L.pic_micro, x.R.pic_micro) > -1;
+    return `<option value="${l}"${l === state.niveau ? " selected" : ""}>${l} dB${l === "-21" ? " (écoute habituelle)" : ""}${s ? " (micro saturé)" : ""}</option>`; }).join("");
+  sel.onchange = () => { state.niveau = sel.value; render(); };
+  const nv = document.getElementById("nouv"), others = D.campagnes.slice(1);
+  if (!others.length) document.getElementById("nouvWrap").hidden = true;
+  else {
+    nv.innerHTML = others.map(c => `<option value="${c.etiquette}">${c.etiquette}</option>`).join("");
+    nv.value = state.nouv = others[others.length - 1].etiquette;
+    nv.onchange = () => { state.nouv = nv.value; render(); };
+  }
+  document.querySelectorAll("#voie button").forEach(b => b.onclick = () => {
+    state.voie = b.dataset.v;
+    document.querySelectorAll("#voie button").forEach(x => x.setAttribute("aria-pressed", x === b));
+    render();
+  });
+  facts(); render();
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", render);
+  new MutationObserver(render).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+}
+
+fetch("courbes.json").then(r => r.json()).then(d => { D = d; init(); })
+  .catch(() => { document.getElementById("p1").innerHTML = '<p class="empty">Les données des courbes (courbes.json) n\'ont pas pu être chargées.</p>'; });
+</script>

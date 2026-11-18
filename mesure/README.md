@@ -65,3 +65,21 @@ reglages live ; reporter les valeurs retenues dans les YAML de `camilladsp/`.
 ## Resultats
 
 `resultats/` : resultats dates. `history/` : courbes avant/apres de septembre.
+
+## Campagnes multi-niveaux (depuis le 18/11/2026)
+
+    python3 campagne.py <etiquette> -36 -28 -21 -14 -8   # sweeps L, R + kick a chaque volume
+    python3 analyse.py resultats/<campagne>              # effet du volume, ecart L/R, pics etroits
+    python3 analyse.py resultats/<A> resultats/<B>       # B - A au meme volume
+    python3 courbes.py page/courbes.json resultats/<base> resultats/<iteration> ...
+
+- Loudness coupe pendant la campagne (puis restaure, ainsi que le volume) :
+  on mesure l EQ seule.
+- La montee s arrete si le micro depasse -1 dBFS (a -8 dB il sature : baisser
+  le gain du Scarlett pour mesurer plus fort).
+- Le module camilladsp n existe que dans ~/audio-power/venv (sans numpy) :
+  campagne.py l appelle par ce python ; apply_iter.py se lance avec
+  ~/audio-power/venv/bin/python3.
+- page/ : page des courbes (sans correction / ancienne / nouvelle correction),
+  publiee sur claude.ai ; courbes.json est regenere par courbes.py.
+- Reference : resultats/2026-11-18_base-notch-off (tag git reglage-2026-11-18-base).
