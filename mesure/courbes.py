@@ -8,7 +8,8 @@ Pour chaque campagne et chaque niveau :
                  CamillaDSP de la voie (config_active.json, loudness force a 0,
                  preamp exclu car constant)
   - "eq"       : reponse calculee de la correction seule
-Toutes les courbes sont recalees sur leur moyenne 200-1000 Hz (0 dB).
+Les deux voies sont recalees ensemble sur leur moyenne 500-2500 Hz (zone sans filtre) :
+l ecart reel G/D reste visible. L eq est recalee sur sa propre moyenne 500-2500 Hz.
 
 Les courbes fines viennent de niveaux.json ("bands_12") ; si absentes, elles sont
 recalculees depuis les enregistrements /tmp/camp_<voie>_<vol>.wav s'ils existent.
@@ -60,10 +61,12 @@ def eq_response(cfg, ch, f):
     return tot
 
 
-def norm(vals, f):
+REF = (500, 2500)
+
+
+def ref_mask(f):
     f = np.asarray(f)
-    m = (f >= 200) & (f <= 1000)
-    return vals - np.nanmean(vals[m])
+    return (f >= REF[0]) & (f <= REF[1])
 
 
 def fine_from_wav(path):
@@ -94,13 +97,16 @@ def main():
                     fine = fine_from_wav(wav)
                     lv[ch]["bands_12"] = [round(float(v), 2) if v is not None else None for v in fine]
                 meas = np.array([np.nan if v is None else v for v in fine], dtype=float)
-                clean = lambda a: [None if np.isnan(v) else round(float(v), 2) for v in a]
-                entry[ch] = {
-                    "mesure": clean(norm(meas, f)),
-                    "brut": clean(norm(meas - eq[ch], f)),
-                    "eq": np.round(eq[ch] - np.mean(eq[ch][(f >= 200) & (f <= 1000)]), 2).tolist(),
-                    "pic_micro": lv[ch]["peak_dbfs"],
-                }
+                entry[ch] = {"_m": meas, "_b": meas - eq[ch],
+                             "eq": np.round(eq[ch] - np.mean(eq[ch][ref_mask(f)]), 2).tolist(),
+                             "pic_micro": lv[ch]["peak_dbfs"]}
+            clean = lambda a: [None if np.isnan(v) else round(float(v), 2) for v in a]
+            if "L" in entry and "R" in entry:
+                rm = np.nanmean(np.r_[entry["L"]["_m"][ref_mask(f)], entry["R"]["_m"][ref_mask(f)]])
+                rb = np.nanmean(np.r_[entry["L"]["_b"][ref_mask(f)], entry["R"]["_b"][ref_mask(f)]])
+                for ch in ("L", "R"):
+                    entry[ch]["mesure"] = clean(entry[ch].pop("_m") - rm)
+                    entry[ch]["brut"] = clean(entry[ch].pop("_b") - rb)
             entry["kick_ms"] = lv["kick"]["decay_ms"]
             camp["niveaux"][vol] = entry
         # memorise les courbes fines recalculees

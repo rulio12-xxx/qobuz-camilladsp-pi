@@ -5,7 +5,7 @@
 :root {
   --bg: #f7f8f8; --surface: #ffffff; --ink: #121516; --ink-2: #4e5457; --muted: #868c8f;
   --grid: #e3e6e6; --axis: #c3c8c9; --ring: rgba(18,21,22,.10); --chip: #eef1f1;
-  --s-brut: #eb6834; --s-old: #2a78d6; --s-new: #1baf7a;
+  --s-brut: #eb6834; --s-old: #2a78d6; --s-new: #1baf7a; --s-new2: #6250d6; --s-new3: #e87ba4;
   --lv1: #86b6ef; --lv2: #5598e7; --lv3: #2a78d6; --lv4: #1c5cab; --lv5: #0d366b;
   --warn: #b06000; --good: #188038;
   --f-ui: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -14,13 +14,13 @@
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --bg: #111314; --surface: #1a1c1d; --ink: #eef0f0; --ink-2: #c0c5c7; --muted: #8b9194;
   --grid: #2a2d2e; --axis: #3a3e40; --ring: rgba(255,255,255,.10); --chip: #24282a;
-  --s-brut: #d95926; --s-old: #3987e5; --s-new: #199e70;
+  --s-brut: #d95926; --s-old: #3987e5; --s-new: #199e70; --s-new2: #9085e9; --s-new3: #d55181;
   --lv1: #184f95; --lv2: #1c5cab; --lv3: #3987e5; --lv4: #6da7ec; --lv5: #b7d3f6;
   --warn: #fdd663; --good: #81c995; color-scheme: dark } }
 :root[data-theme="dark"] {
   --bg: #111314; --surface: #1a1c1d; --ink: #eef0f0; --ink-2: #c0c5c7; --muted: #8b9194;
   --grid: #2a2d2e; --axis: #3a3e40; --ring: rgba(255,255,255,.10); --chip: #24282a;
-  --s-brut: #d95926; --s-old: #3987e5; --s-new: #199e70;
+  --s-brut: #d95926; --s-old: #3987e5; --s-new: #199e70; --s-new2: #9085e9; --s-new3: #d55181;
   --lv1: #184f95; --lv2: #1c5cab; --lv3: #3987e5; --lv4: #6da7ec; --lv5: #b7d3f6;
   --warn: #fdd663; --good: #81c995; color-scheme: dark }
 </style>
@@ -82,7 +82,7 @@ th { color: var(--muted); font-weight: 500; }
   <header>
     <span class="eyebrow">Chaîne CamillaDSP · micro Scarlett 2i2, nouvelle position d'écoute</span>
     <h1>Réponse du salon</h1>
-    <p class="sub">Courbes mesurées au micro, voie par voie, en 1/12 d'octave. Chaque courbe est recalée à 0 dB sur sa moyenne 200 Hz-1 kHz, pour comparer des formes et non des volumes. Loudness coupé pendant les mesures. Attention : sur cette campagne, les notches 42/64 Hz étaient en fait actifs (−9 dB) alors que l'interface les disait coupés ; c'est corrigé depuis.</p>
+    <p class="sub">Courbes au micro à la position d'écoute, enceinte par enceinte, en 1/12 d'octave. Les deux enceintes sont recalées ensemble sur leur moyenne 500 Hz-2,5 kHz (zone sans filtre) : leur vrai écart reste visible. Loudness coupé.</p>
   </header>
 
   <section class="facts" id="facts" aria-label="Constats"></section>
@@ -202,53 +202,50 @@ function legend(el, series) {
 }
 
 const base = () => D.campagnes[0];
-const nouvelle = () => D.campagnes.length > 1 ? D.campagnes.find(c => c.etiquette === state.nouv) || D.campagnes[D.campagnes.length - 1] : null;
+const others = () => D.campagnes.slice(1);
+const SLOTS = ["--s-new", "--s-new2", "--s-new3"];
 const sub = (a, b) => a.map((v, i) => v == null || b[i] == null ? null : +(v - b[i]).toFixed(2));
+const shortName = c => c.etiquette.split(" (")[0];
 
 function render() {
-  const v = state.voie, n = state.niveau, B = base().niveaux[n], N = nouvelle() && nouvelle().niveaux[n];
+  const v = state.voie, n = state.niveau, B = base().niveaux[n];
   const s1 = [
     { key: "brut", name: "Sans correction", c: css("--s-brut"), v: B[v].brut, dash: true },
-    { key: "old", name: "Ancienne correction", c: css("--s-old"), v: B[v].mesure },
+    { key: "old", name: shortName(base()), c: css("--s-old"), v: B[v].mesure },
   ];
-  if (N) s1.push({ key: "new", name: "Nouvelle correction", c: css("--s-new"), v: N[v].mesure });
+  others().forEach((c, k) => { if (c.niveaux[n]) s1.push({ key: "c" + k, name: shortName(c), c: css(SLOTS[Math.min(k, 2)]), v: c.niveaux[n][v].mesure }); });
   legend(document.getElementById("lg1"), s1);
   chart(document.getElementById("p1"), s1, { y: [-30, 15], step: 5, label: "Réponse en fréquence" });
-  const sat = Math.max(B.L.pic_micro, B.R.pic_micro) > -1;
-  document.getElementById("n1").textContent = (N ? "" : "La nouvelle correction apparaîtra ici dès la première itération mesurée. ")
-    + "« Sans correction » est calculé : la mesure moins l'effet exact des filtres CamillaDSP de la voie."
-    + (sat ? " Attention : à ce volume le micro a saturé, la mesure n'est pas fiable." : "");
+  document.getElementById("n1").textContent = "Les trois réglages sont calculés sur les mêmes mesures (réponses impulsionnelles du 18/11 après-midi, de −21 à 0 dB) : les différences viennent uniquement des filtres. « Sans correction » = la mesure sans aucun filtre. Le FIR de phase ne change pas ces courbes (il agit sur le temps, pas sur le niveau).";
 
-  const s2 = [{ key: "lr_old", name: "Ancienne correction", c: css("--s-old"), v: sub(B.L.mesure, B.R.mesure) },
-              { key: "lr_brut", name: "Sans correction", c: css("--s-brut"), v: sub(B.L.brut, B.R.brut), dash: true }];
-  if (N) s2.push({ key: "lr_new", name: "Nouvelle correction", c: css("--s-new"), v: sub(N.L.mesure, N.R.mesure) });
+  const s2 = [{ key: "lr_brut", name: "Sans correction", c: css("--s-brut"), v: sub(B.L.brut, B.R.brut), dash: true },
+              { key: "lr_old", name: shortName(base()), c: css("--s-old"), v: sub(B.L.mesure, B.R.mesure) }];
+  others().forEach((c, k) => { if (c.niveaux[n]) s2.push({ key: "lr_c" + k, name: shortName(c), c: css(SLOTS[Math.min(k, 2)]), v: sub(c.niveaux[n].L.mesure, c.niveaux[n].R.mesure) }); });
   legend(document.getElementById("lg2"), s2);
   chart(document.getElementById("p2"), s2, { y: [-15, 15], step: 5, h: 300, label: "Écart gauche moins droite" });
 
-  const C = N ? nouvelle() : base(), ref = C.niveaux["-21"] || C.niveaux[n];
+  const C = others()[0] || base(), N = C !== base(), ref = C.niveaux["-21"] || C.niveaux[n];
   const lvs = Object.keys(C.niveaux).sort((a, b) => a - b);
   const cols = ["--lv1", "--lv2", "--lv3", "--lv4", "--lv5"];
   const s3 = lvs.map((l, k) => ({ key: "lv" + l, name: l + " dB" + (Math.max(C.niveaux[l].L.pic_micro, C.niveaux[l].R.pic_micro) > -1 ? " (saturé)" : ""),
     c: css(cols[Math.min(k, cols.length - 1)]), v: sub(C.niveaux[l][v].mesure, ref[v].mesure), dash: Math.max(C.niveaux[l].L.pic_micro, C.niveaux[l].R.pic_micro) > -1 }));
   legend(document.getElementById("lg3"), s3);
   chart(document.getElementById("p3"), s3, { y: [-10, 20], step: 5, h: 300, label: "Différence de forme selon le volume" });
-  document.getElementById("n3").textContent = `${N ? "Nouvelle" : "Ancienne"} correction, voie ${v === "L" ? "gauche" : "droite"} : chaque volume comparé à −21 dB, écart de volume retiré. Une ligne plate à 0 = même équilibre tonal quel que soit le volume. Sous 50 Hz aux faibles volumes, la remontée vient surtout du bruit de fond de la pièce capté par le micro.`;
+  document.getElementById("n3").textContent = `${shortName(C)}, voie ${v === "L" ? "gauche" : "droite"} : chaque volume comparé à −21 dB, écart de volume retiré. Une ligne plate à 0 = même équilibre tonal quel que soit le volume.`;
 
   const rowsF = D.freqs.map((f, i) => i).filter(i => i % 2 === 0);
-  let t = `<table><thead><tr><th>Fréquence</th><th>Sans correction</th><th>Ancienne</th>${N ? "<th>Nouvelle</th>" : ""}<th>G − D (anc.)</th></tr></thead><tbody>`;
-  rowsF.forEach(i => { t += `<tr><td>${fmtF(D.freqs[i])}</td><td>${fmtDb(B[v].brut[i])}</td><td>${fmtDb(B[v].mesure[i])}</td>${N ? `<td>${fmtDb(N[v].mesure[i])}</td>` : ""}<td>${fmtDb(s2[0].v[i])}</td></tr>`; });
+  const cs = [base()].concat(others()).filter(c => c.niveaux[n]);
+  let t = `<table><thead><tr><th>Fréquence</th><th>Sans correction</th>${cs.map(c => `<th>${shortName(c)}</th>`).join("")}</tr></thead><tbody>`;
+  rowsF.forEach(i => { t += `<tr><td>${fmtF(D.freqs[i])}</td><td>${fmtDb(B[v].brut[i])}</td>${cs.map(c => `<td>${fmtDb(c.niveaux[n][v].mesure[i])}</td>`).join("")}</tr>`; });
   document.getElementById("tbl").innerHTML = t + "</tbody></table>";
 }
 
 function facts() {
-  const B = base();
-  const k = Object.entries(B.niveaux).map(([l, x]) => x.kick_ms).filter(x => x != null);
-  const kmin = Math.round(Math.min(...k)), kmax = Math.round(Math.max(...k));
   const items = [
-    { t: "Vibrations du meuble", tag: ["ok", "Rien qui grandit avec le volume"], p: "Remesuré ensuite avec les notches vraiment coupés : à 42 et 64 Hz, le niveau reste le même à −21 et −14 dB (à 1 dB près). Un objet qui vibre ferait grandir le pic avec le volume. Le +11 dB à 62-66 Hz à droite venait d'un ancien filtre (+16,5 dB), corrigé. À confirmer à l'oreille, le micro est loin du meuble." },
-    { t: "Effet du volume", tag: ["ok", "Stable au-dessus de 50 Hz"], p: "De −28 à −14 dB, la forme reste identique à ±0,3 dB de 50 Hz à 16 kHz. Pas besoin d'un réglage par volume au-dessus de 50 Hz : le loudness suffit. Sous 40 Hz, à revoir avec des mesures moyennées." },
-    { t: "Gauche / droite", tag: ["w", "Gros écarts à corriger"], p: "À la nouvelle position, la droite est bien plus forte à 63 Hz (11 dB), 100 et 160 Hz (5 à 6 dB) ; la gauche à 200-250 Hz et 2 kHz (près de 3 dB). L'ancien équilibrage était fait pour l'autre position." },
-    { t: "Kick", tag: ["ok", `${kmin} à ${kmax} ms`], p: "Chute de −20 dB du grave du kick, constante sur tous les volumes. Nouvelle référence pour cette position du micro." },
+    { t: "Grave gauche / droite", tag: ["ok", "Écart divisé par 2"], p: "De 45 à 200 Hz, l'écart moyen entre les enceintes passe de 5,4 dB (ancien réglage) à 2,8 dB. Le +11 dB de la droite à 62-66 Hz (ancien filtre à +16,5 dB) a disparu." },
+    { t: "Gauche 200-500 Hz", tag: ["w", "−2,5 dB à corriger"], p: "Le réglage actuel creuse la gauche de 2 à 3 dB entre 200 et 500 Hz (filtre large à 216 Hz). La proposition le ramène à −3 dB : écart G/D 200-600 Hz de −2,5 à 0 dB, et le clic du kick y gagne encore (+2 dB, plus net)." },
+    { t: "Aigu", tag: ["ok", "Inchangé entre G et D"], p: "Au-dessus de 1 kHz, l'écart G/D reste de +0,4 à +0,5 dB. Seul le renfort du clic (4,5 kHz, +2,2 dB) monte un peu l'aigu des deux enceintes." },
+    { t: "Effet du volume", tag: ["ok", "Stable de −21 à 0 dB"], p: "Même forme de courbe à tous les volumes, distorsion sous −70 dB pendant le grave du kick : le réglage vaut jusqu'au volume maximal." },
   ];
   document.getElementById("facts").innerHTML = items.map(x => `<div class="fact"><b>${x.t}</b><span class="tag ${x.tag[0]}">${x.tag[1]}</span><p>${x.p}</p></div>`).join("");
 }
@@ -259,13 +256,7 @@ function init() {
   sel.innerHTML = lvs.map(l => { const x = base().niveaux[l], s = Math.max(x.L.pic_micro, x.R.pic_micro) > -1;
     return `<option value="${l}"${l === state.niveau ? " selected" : ""}>${l} dB${l === "-21" ? " (écoute habituelle)" : ""}${s ? " (micro saturé)" : ""}</option>`; }).join("");
   sel.onchange = () => { state.niveau = sel.value; render(); };
-  const nv = document.getElementById("nouv"), others = D.campagnes.slice(1);
-  if (!others.length) document.getElementById("nouvWrap").hidden = true;
-  else {
-    nv.innerHTML = others.map(c => `<option value="${c.etiquette}">${c.etiquette}</option>`).join("");
-    nv.value = state.nouv = others[others.length - 1].etiquette;
-    nv.onchange = () => { state.nouv = nv.value; render(); };
-  }
+  document.getElementById("nouvWrap").hidden = true;
   document.querySelectorAll("#voie button").forEach(b => b.onclick = () => {
     state.voie = b.dataset.v;
     document.querySelectorAll("#voie button").forEach(x => x.setAttribute("aria-pressed", x === b));
