@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Domotique</title>
+<style>
+:root{--bg:#f6f7f9;--fg:#1c2330;--card:#fff;--mut:#6b7585;--bd:#e2e6ec;--ac:#2563eb}
+@media(prefers-color-scheme:dark){:root{--bg:#10141b;--fg:#e6e9ef;--card:#181e28;--mut:#93a0b4;--bd:#2a3342;--ac:#6ea0ff}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:16px system-ui,sans-serif;padding:16px;max-width:900px;margin:auto}
+header{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+h1{font-size:1.3rem;margin:0}button,a.btn{background:var(--ac);color:#fff;border:0;border-radius:8px;padding:8px 14px;font:inherit;cursor:pointer;text-decoration:none}
+h2{font-size:1rem;color:var(--mut);margin:24px 0 8px;text-transform:uppercase;letter-spacing:.05em}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:12px}
+.card b{display:block}.mut{color:var(--mut);font-size:.85rem}.empty{color:var(--mut)}
+</style></head><body>
+<header><h1>Domotique</h1><div><a class="btn" id="nvr" target="_blank">NVR</a> <button id="scan">Scanner</button></div></header>
+<div id="ctl"></div>
+<div id="app"></div>
+<script>
+const KINDS={shelly:"Shelly",reolink:"Caméras Reolink",camera:"Autres caméras ONVIF",ble:"Bluetooth"};
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function ago(t){const s=Math.floor(Date.now()/1000-t);return s<90?"à l'instant":s<5400?Math.round(s/60)+" min":Math.round(s/3600)+" h"}
+async function load(){
+  const d=await (await fetch("/api/devices")).json(),app=document.getElementById("app");
+  app.innerHTML=Object.entries(KINDS).map(([k,label])=>{
+    const l=d.filter(x=>x.kind===k);
+    return `<h2>${label} (${l.length})</h2>`+(l.length?`<div class="grid">${l.map(x=>
+      `<div class="card"><b>${esc(x.name)}</b><span class="mut">${esc([x.model,x.ip||x.mac].filter(Boolean).join(" · "))}</span><br>
+       <span class="mut">vu il y a ${ago(x.last_seen)}${x.rssi?` · ${x.rssi} dBm`:""}</span>${x.ip&&k!=="ble"?`<br><a href="http://${esc(x.ip)}" target="_blank">ouvrir</a>`:""}</div>`).join("")}</div>`:`<p class="empty">Aucun appareil.</p>`);
+  }).join("");
+}
+document.getElementById("scan").onclick=async e=>{e.target.disabled=true;e.target.textContent="Scan…";await fetch("/api/scan",{method:"POST"});await load();e.target.disabled=false;e.target.textContent="Scanner"};
+fetch("/api/config").then(r=>r.json()).then(c=>document.getElementById("nvr").href=c.frigate_url);
+async function loadCtl(){
+  const r=await fetch("/api/control");if(!r.ok)return;const l=await r.json();
+  document.getElementById("ctl").innerHTML=l.length?`<h2>Pilotage</h2><div class="grid">${l.map(c=>
+    `<div class="card"><b>${esc(c.name)}</b><span class="mut">${c.online?(c.output?"ALLUMÉ":"éteint"):"injoignable"} · ${c.mode==="auto"?"auto : allumé en heures creuses":"manuel"}${c.power!=null?` · ${Math.round(c.power)} W`:""}</span><br>
+     <button onclick="act('${esc(c.id)}','on')">Allumer</button> <button onclick="act('${esc(c.id)}','off')">Éteindre</button> <button onclick="act('${esc(c.id)}','auto')">Auto HC</button></div>`).join("")}</div>`:"";
+}
+async function act(id,a){
+  const post=(u,b)=>fetch(u,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(b)});
+  const r=a==="auto"?await post(`/api/control/${id}/mode`,{mode:"auto"}):await post(`/api/control/${id}/switch`,{on:a==="on"});
+  if(!r.ok){try{alert((await r.json()).detail)}catch(e){alert("Erreur "+r.status)}}
+  loadCtl();
+}
+load();loadCtl();setInterval(load,5000);setInterval(loadCtl,5000);
+</script></body></html>

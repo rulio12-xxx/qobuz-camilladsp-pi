@@ -1,0 +1,5 @@
+fastapi>=0.110
+uvicorn>=0.29
+paho-mqtt>=2.0
+zeroconf>=0.130
+bleak>=0.22
