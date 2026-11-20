@@ -21,26 +21,19 @@ devices:
     format: S32_LE
 
 filters:
-  phase_grave:
-    type: Conv
-    description: correction de phase du grave (mesure/fir.py, 18/11/2026)
-    parameters:
-      type: Raw
-      filename: /home/rulio12/camilladsp/fir/phase_L.raw
-      format: F32_LE
   notch_42:
     type: Biquad
     parameters:
       type: Peaking
       freq: 42
-      gain: -9
+      gain: -9.0
       q: 8.0
   notch_64:
     type: Biquad
     parameters:
       type: Peaking
       freq: 64
-      gain: -9
+      gain: -9.0
       q: 8.0
   treble_air:
     type: Biquad
@@ -53,44 +46,44 @@ filters:
     type: Biquad
     parameters:
       type: Peaking
-      freq: 73
-      gain: 7.8
-      q: 0.82
+      freq: 80
+      gain: 4.0
+      q: 4.0
   kick_body_R:
     type: Biquad
     parameters:
       type: Peaking
-      freq: 77.3
-      gain: 8.8
-      q: 5
+      freq: 80
+      gain: 3.5
+      q: 4.0
   click_boost:
     type: Biquad
     parameters:
       type: Peaking
-      freq: 4500
-      gain: 2.2
-      q: 1.02
+      freq: 2600
+      gain: 2.0
+      q: 3.0
   mode50_cut_R:
     type: Biquad
     parameters:
       type: Peaking
-      freq: 56.2
-      gain: -2.4
-      q: 4.99
+      freq: 50
+      gain: -10.0
+      q: 5.5
   mode50_cut_L:
     type: Biquad
     parameters:
       type: Peaking
-      freq: 55.2
-      gain: -6
-      q: 4.89
+      freq: 50
+      gain: -10.0
+      q: 4.5
   kick_fill_R:
     type: Biquad
     parameters:
       type: Peaking
-      freq: 46.7
-      gain: 6
-      q: 1.86
+      freq: 70
+      gain: 3.2
+      q: 1.8
   balance_L:
     type: Biquad
     parameters:
@@ -102,25 +95,25 @@ filters:
     type: Biquad
     parameters:
       type: Peaking
-      freq: 106.5
-      gain: -9.1
-      q: 5.36
+      freq: 180
+      gain: -2.5
+      q: 0.9
   delay_L:
     type: Delay
     parameters:
-      delay: 55
-      unit: samples
-      subsample: false
+      delay: 1.2
+      unit: ms
+      subsample: true
   delay_R:
     type: Delay
     parameters:
       delay: 0
       unit: ms
-      subsample: false
+      subsample: true
   preamp:
     type: Gain
     parameters:
-      gain: -19.5
+      gain: -20.5
   limiter:
     type: Limiter
     parameters:
@@ -130,58 +123,58 @@ filters:
     type: Biquad
     parameters:
       type: Peaking
-      freq: 57.4
-      gain: -3.4
-      q: 4.91
+      freq: 56.1
+      gain: -3.0
+      q: 5.381
   filterL_2:
     type: Biquad
     parameters:
       type: Peaking
-      freq: 81.1
-      gain: 5.8
-      q: 5.07
+      freq: 70.5
+      gain: -0.5
+      q: 2.992
   filterL_3:
     type: Biquad
     parameters:
       type: Peaking
       freq: 93.2
-      gain: -14.2
-      q: 5.01
+      gain: -7.9
+      q: 4.272
   filterL_4:
     type: Biquad
     parameters:
       type: Peaking
-      freq: 121.1
-      gain: 4.8
-      q: 5.02
+      freq: 113.5
+      gain: 4.5
+      q: 4.477
   filterL_5:
     type: Biquad
     parameters:
       type: Peaking
-      freq: 135.9
-      gain: -6.3
-      q: 5
+      freq: 124.0
+      gain: 0.0
+      q: 7.419
   filterL_6:
     type: Biquad
     parameters:
       type: Peaking
-      freq: 216.2
-      gain: -7.4
-      q: 1
+      freq: 160.5
+      gain: -11.5
+      q: 4.542
   filterL_7:
     type: Biquad
     parameters:
       type: Peaking
-      freq: 206.3
-      gain: 6.1
-      q: 4.9
+      freq: 231.0
+      gain: 1.5
+      q: 6.877
   filterL_8:
     type: Biquad
     parameters:
       type: Peaking
-      freq: 184.9
-      gain: -7.8
-      q: 5.04
+      freq: 244.0
+      gain: -4.7
+      q: 4.911
   filterL_9:
     type: Biquad
     parameters:
@@ -242,30 +235,30 @@ filters:
     type: Biquad
     parameters:
       type: Peaking
-      freq: 76.8
-      gain: 5
-      q: 5.12
+      freq: 56.0
+      gain: 2.0
+      q: 3.500
   filterR_01:
     type: Biquad
     parameters:
       type: Peaking
-      freq: 60.9
-      gain: 4
-      q: 5.1
+      freq: 64.0
+      gain: 16.5
+      q: 6.000
   filterR_1:
     type: Biquad
     parameters:
       type: Peaking
-      freq: 154.8
-      gain: -3.1
-      q: 5.05
+      freq: 150.0
+      gain: 1.8
+      q: 7.180
   filterR_2:
     type: Biquad
     parameters:
       type: Peaking
-      freq: 216.5
-      gain: -3.5
-      q: 5.06
+      freq: 223.0
+      gain: -3.0
+      q: 2.791
   filterR_3:
     type: Biquad
     parameters:
@@ -350,6 +343,18 @@ filters:
       freq: 3500
       gain: 0.0
       q: 1.2
+processors:
+  tube:
+    type: Compressor
+    parameters:
+      channels: 2
+      attack: 0.005
+      release: 0.05
+      threshold: -22
+      factor: 3.0
+      makeup_gain: 2.0
+      clip_limit: -0.3
+      soft_clip: true
 pipeline:
   - type: Filter
     channels: [0]
@@ -410,10 +415,8 @@ pipeline:
       - delay_R
       - loud_bass
       - loud_treble
-  - type: Filter
-    channels: [0, 1]
-    names:
-      - phase_grave
+  - type: Processor
+    name: tube
   - type: Filter
     channels: [0, 1]
     names:

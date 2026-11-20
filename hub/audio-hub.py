@@ -205,8 +205,8 @@ def set_loud(on):
 
 # 18/11 : le reglage de base (dans les YAML) est deja le kick « normal » ;
 # le bouton ajoute un renfort par-dessus. Etat lu en direct dans CamillaDSP.
-KICKBODY_BASE_L = 4.8   # = kick_body_L dans les YAML (mesure/optim_kick.py)
-KICKBODY_BASE_R = 5.8   # = kick_body_R dans les YAML
+KICKBODY_BASE_L = 4.0   # = kick_body_L dans les YAML (reglage d avant le 18/11, remis le 20/11)
+KICKBODY_BASE_R = 3.5   # = kick_body_R dans les YAML
 KICKBODY_BOOST = 3.0    # renfort quand le bouton Kick est allume
 
 
