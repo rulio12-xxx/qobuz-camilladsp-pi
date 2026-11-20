@@ -208,7 +208,7 @@ def set_loud(on):
 # le bouton ajoute un renfort par-dessus. Etat lu en direct dans CamillaDSP.
 # Bouton Kick a trois niveaux (20/11) : gains kick_body G / D en dB.
 # « avec » = valeurs des YAML (reglage d'avant le 18/11), niveau par defaut.
-KICK_NIVEAUX = {"sans": (0.0, 0.0), "avec": (4.0, 3.5), "double": (9.0, 8.5)}
+KICK_NIVEAUX = {"sans": (0.0, 0.0), "avec": (4.0, 3.5), "double": (10.0, 9.5)}
 KICK_ORDRE = ["sans", "avec", "double"]
 
 
