@@ -21,6 +21,14 @@ devices:
     format: S32_LE
 
 filters:
+  aigu_pente:
+    type: Biquad
+    description: pente douce dans l'aigu (demande du 20/11/2026)
+    parameters:
+      type: Highshelf
+      freq: 2500
+      gain: -1.5
+      q: 0.5
   notch_42:
     type: Biquad
     parameters:
@@ -415,6 +423,10 @@ pipeline:
       - delay_R
       - loud_bass
       - loud_treble
+  - type: Filter
+    channels: [0, 1]
+    names:
+      - aigu_pente
   - type: Processor
     name: tube
   - type: Filter
