@@ -130,6 +130,7 @@ def status_json():
                        "bluetooth": bluetooth_status(), "tube": tube_level(),
                        "loud": loud_enabled(),
                        "kickbody": kickbody_enabled(),
+                       "kick": kick_niveau(),
                        "notch": notch_enabled(),
                        "phase": phase_state(),
                        "vol": vol})
@@ -205,25 +206,33 @@ def set_loud(on):
 
 # 18/11 : le reglage de base (dans les YAML) est deja le kick « normal » ;
 # le bouton ajoute un renfort par-dessus. Etat lu en direct dans CamillaDSP.
-KICKBODY_BASE_L = 4.0   # = kick_body_L dans les YAML (reglage d avant le 18/11, remis le 20/11)
-KICKBODY_BASE_R = 3.5   # = kick_body_R dans les YAML
-KICKBODY_BOOST = 3.0    # renfort quand le bouton Kick est allume
+# Bouton Kick a trois niveaux (20/11) : gains kick_body G / D en dB.
+# « avec » = valeurs des YAML (reglage d'avant le 18/11), niveau par defaut.
+KICK_NIVEAUX = {"sans": (0.0, 0.0), "avec": (4.0, 3.5), "double": (9.0, 8.5)}
+KICK_ORDRE = ["sans", "avec", "double"]
 
 
-def kickbody_enabled():
+def kick_niveau():
+    """niveau actuel, lu en direct dans CamillaDSP (le plus proche des trois)."""
     code = ("from camilladsp import CamillaClient\n"
             "c = CamillaClient('127.0.0.1', 1234)\nc.connect()\n"
             "print(c.config.active()['filters']['kick_body_L']['parameters']['gain'])\n")
     try:
         r = subprocess.run([VENV_PY, "-c", code], capture_output=True, text=True, timeout=5)
-        return float(r.stdout.strip()) > KICKBODY_BASE_L + KICKBODY_BOOST / 2
+        g = float(r.stdout.strip())
+        return min(KICK_NIVEAUX, key=lambda k: abs(KICK_NIVEAUX[k][0] - g))
     except Exception:
-        return False
+        return None
 
 
-def set_kickbody(on):
-    gain_l = KICKBODY_BASE_L + (KICKBODY_BOOST if on else 0.0)
-    gain_r = KICKBODY_BASE_R + (KICKBODY_BOOST if on else 0.0)
+def kickbody_enabled():
+    return kick_niveau() not in (None, "sans")
+
+
+def set_kick(niveau):
+    if niveau not in KICK_NIVEAUX:
+        return
+    gain_l, gain_r = KICK_NIVEAUX[niveau]
     code = ("from camilladsp import CamillaClient\n"
             "c = CamillaClient('127.0.0.1', 1234)\n"
             "c.connect()\n"
@@ -497,12 +506,12 @@ async function refresh(){
     document.getElementById('tubeToggle').textContent='Lampes '+(tubeOn?'On':'Off');
     document.getElementById('loudToggle').classList.toggle('sel', !!s.loud);
     document.getElementById('loudToggle').textContent='Loudness '+(s.loud?'On':'Off');
-    document.getElementById('kbToggle').classList.toggle('sel', !!s.kickbody);
-    document.getElementById('kbToggle').textContent='Kick '+(s.kickbody?'renforce':'normal');
+    document.getElementById('kbToggle').classList.toggle('sel', s.kick==='double');
+    document.getElementById('kbToggle').textContent='Kick '+(s.kick||'?');
     document.getElementById('notchToggle').classList.toggle('sel', !!s.notch);
     document.getElementById('notchToggle').textContent='Notch 42/64Hz '+(s.notch?'On':'Off');
     {const b=document.getElementById('phaseToggle');b.classList.toggle('sel',s.phase===true);
-     b.textContent='Phase grave '+(s.phase===true?'On':s.phase===false?'Off':'absente');b.disabled=(s.phase==null);}
+     b.textContent='Phase grave '+(s.phase===true?'On':s.phase===false?'Off':'absente');b.disabled=(s.phase==null);b.hidden=(s.phase==null);}
     if(s.vol){vmaj('vdac',s.vol.dac);vmaj('vcdsp',s.vol.cdsp);}
   }catch(e){}
 }
@@ -528,7 +537,8 @@ function toggleLoud(){
 }
 function toggleKickbody(){
   if(!lastStatus)return;
-  setKickbody(lastStatus.kickbody?0:1);
+  const o=['sans','avec','double'], i=o.indexOf(lastStatus.kick);
+  fetch('/kick?niveau='+o[(i+1)%3]).then(()=>setTimeout(refresh,800));
 }
 function toggleNotch(){
   if(!lastStatus)return;
@@ -559,8 +569,11 @@ class H(BaseHTTPRequestHandler):
         elif u.path == "/loud":
             set_loud(q.get("on", ["0"])[0] == "1")
             self._send(200, "text/plain", b"ok")
+        elif u.path == "/kick":
+            set_kick(q.get("niveau", [""])[0])
+            self._send(200, "text/plain", b"ok")
         elif u.path == "/kickbody":
-            set_kickbody(q.get("on", ["0"])[0] == "1")
+            set_kick("avec" if q.get("on", ["0"])[0] == "1" else "sans")
             self._send(200, "text/plain", b"ok")
         elif u.path == "/phase":
             set_phase(q.get("on", ["0"])[0] == "1")
