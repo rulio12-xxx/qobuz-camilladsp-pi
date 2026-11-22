@@ -7,7 +7,7 @@ d'historique. Les configs actives et les FIR de la Pi etaient identiques au depo
 - `sauvegardes-configs/` : les 73 sauvegardes `*.avant-*` (et `camilladsp.yml.bak`)
   faites automatiquement avant chaque ecriture dans les YAML. Le suffixe dit ce
   qui a ete change ensuite :
-  - `avant-lampes` (31/08), `avant-kick` (23/09), `avant-gain` (vinyle, 08/11) ;
+  - `avant-lampes` (30/08), `avant-kick` (22/09), `avant-gain` (vinyle, 08/11) ;
   - 18/11 : `avant-kick`, `avant-renfort` (clic), `avant-fir`, `avant-preamp`, `avant-aigu` ;
   - 20/11 : `avant-retour` (= reglage du 18/11 complet, FIR compris), `avant-pente`.
   Les `*.avant-tube.avant-*` sont les memes etapes sur les fichiers sans lampes.
