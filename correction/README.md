@@ -12,11 +12,12 @@ et services du Pi les attendent la) ; ce dossier les reference.
 | Configs CamillaDSP actives (une par source) | `~/camilladsp/configs/camilladsp-{qobuz,bluetooth,fichiers,cd,vinyle}.yml`, `camilladsp.yml` (= copie de qobuz) | `camilladsp/` |
 | Configs sans lampes (source de la regeneration lampes) | `~/camilladsp/configs/*.yml.avant-tube` | `camilladsp/*.yml.avant-tube` |
 | FIR de phase du grave (float32, 44,1 kHz, 16384 coef.) | `~/camilladsp/fir/phase_L.raw`, `phase_R.raw` | `mesure/fir/` |
-| Premieres configs REW (juillet 2026) | - | `camilladsp/rew-history/` |
+| Premieres configs REW (juillet 2026) | `~/camilladsp/configs/backup/` | `camilladsp/rew-history/`, `correction/archive-pi/backup-juillet-2026/` |
+| Mesures REW brutes (.mdat) | PC : `C:\Users\heipp\REW\temp` | non (74 Mo) ; archive dans les fichiers du projet |
 | Scripts de mesure et de generation | `~/audiohub/mesure/` (= le depot ; `~/bassmeasure` y pointe) | `mesure/` |
 | Mesures et iterations datees | `~/audiohub/mesure/resultats/`, `iterations/`, `history/` | idem |
 | Etage lampes | `~/tube/` | `tube/` |
-| Sauvegardes avant chaque ecriture (`*.avant-kick-…`, `*.avant-fir-…`, `*.avant-retour-…`) | `~/camilladsp/configs/` | non (ignorees par `.gitignore`) ; l'etat equivalent est dans les tags ci-dessous |
+| Sauvegardes avant chaque ecriture (`*.avant-kick-…`, `*.avant-fir-…`, `*.avant-retour-…`) | `~/camilladsp/configs/` | copie du 22/11 dans `correction/archive-pi/` (voir son README) |
 
 Les filtres sont **identiques dans toutes les sources** ; seul le `preamp`
 change (Qobuz/Fichiers/CD -20,5 dB, Vinyle -17,5 dB, Bluetooth -16,5 dB) et
@@ -41,6 +42,8 @@ sa config, reappliques par l'interface) : bouton Kick a trois niveaux dans
 
 ## Methode de generation (dans l'ordre historique)
 
+0. **Premiere correction a la main (19/07)** : `archive-pi/backup-juillet-2026/camilladspClaude.yml`
+   (passe-haut 28 Hz, Lowshelf 100 Hz +5 dB, coupes de modes).
 1. **Correction de piece REW (juillet-septembre 2026)** : sweep au micro de mesure
    a la position d'ecoute, EQ automatique REW par voie -> filtres `filterL_1..16`
    et `filterR_0..12` (Peaking). Versions successives dans `camilladsp/rew-history/`,

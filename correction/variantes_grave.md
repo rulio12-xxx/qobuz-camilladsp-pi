@@ -8,6 +8,12 @@ Pour ecouter de nouveau une variante : `git show <commit>:camilladsp/camilladsp-
 donne la config complete ; les valeurs se reportent avec `mesure/regle.py filtre.param=valeur`
 (en direct) ou `mesure/persiste.py` (dans les YAML).
 
+## 0. Premiere correction a la main (19/07, avant REW)
+
+`correction/archive-pi/backup-juillet-2026/camilladspClaude.yml` : headroom -6 dB,
+passe-haut 28 Hz (Butterworth ordre 4), **renfort Lowshelf 100 Hz +5 dB Q0,7** sur les
+deux voies, coupes de modes G 55 Hz -9, 93 Hz -4, 160 Hz -5 ; D 151 Hz -6, 215 Hz -3,5.
+
 ## 1. Correction REW d'origine (25/07, 6f654cd)
 
 EQ automatique REW. Renforts : `filterL_2` 70,5 Hz +6 dB Q3, `filterL_4` 113,5 Hz +4,5 dB,
@@ -89,6 +95,11 @@ Reglage en direct de `kick_body_L/R` (80 Hz Q4) par l'interface (`hub/audio-hub.
 | sans | 0 | 0 |
 | avec (= YAML) | +4,0 | +3,5 |
 | double | +9,0 / +8,5 (4da876a) puis **+10,0 / +9,5** (43d8580) |
+
+## Sauvegardes de la Pi
+
+Toutes les sauvegardes `*.avant-*` de la Pi (etat avant chaque changement des 18 et
+20/11, etc.) sont dans `correction/archive-pi/sauvegardes-configs/`.
 
 ## Non retrouve dans git
 

@@ -1,0 +1,56 @@
+devices:
+  samplerate: 44100
+  chunksize: 4096
+  queuelimit: 4
+  silence_threshold: -80
+  silence_timeout: 200
+  enable_rate_adjust: true
+  capture_samplerate: 44100
+  resampler:
+    type: AsyncSinc
+    profile: Balanced
+  capture:
+    type: Alsa
+    channels: 2
+    device: "hw:10,1"
+    format: F32_LE
+  playback:
+    type: Alsa
+    channels: 2
+    device: "hw:2,0"
+    format: S32_LE
+
+filters:
+  headroom:
+    type: Gain
+    parameters: { gain: -6.0, inverted: false }
+  protect_hp:
+    type: BiquadCombo
+    parameters: { type: ButterworthHighpass, freq: 28, order: 4 }
+  target_bass:
+    type: Biquad
+    parameters: { type: Lowshelf, freq: 100, gain: 5.0, q: 0.7 }
+  L_mode55:
+    type: Biquad
+    parameters: { type: Peaking, freq: 55, gain: -9.0, q: 5.0 }
+  L_mode93:
+    type: Biquad
+    parameters: { type: Peaking, freq: 93, gain: -4.0, q: 5.0 }
+  L_mode160:
+    type: Biquad
+    parameters: { type: Peaking, freq: 160, gain: -5.0, q: 5.0 }
+  R_mode151:
+    type: Biquad
+    parameters: { type: Peaking, freq: 151, gain: -6.0, q: 6.0 }
+  R_mode215:
+    type: Biquad
+    parameters: { type: Peaking, freq: 215, gain: -3.5, q: 2.5 }
+
+pipeline:
+  - type: Filter
+    channels: [0]
+    names: [headroom, protect_hp, L_mode55, L_mode93, L_mode160, target_bass]
+  - type: Filter
+    channels: [1]
+    names: [headroom, protect_hp, R_mode151, R_mode215, target_bass]
+
