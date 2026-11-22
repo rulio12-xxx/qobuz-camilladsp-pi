@@ -557,7 +557,7 @@ function toggleLoud(){
 function toggleKickbody(){
   if(!lastStatus)return;
   const o=lastStatus.kick_fir?['sans','avec']:['sans','avec','double'], i=o.indexOf(lastStatus.kick);
-  fetch('/kick?niveau='+o[(i+1)%3]).then(()=>setTimeout(refresh,800));
+  fetch('/kick?niveau='+o[(i+1)%o.length]).then(()=>setTimeout(refresh,800));
 }
 function toggleNotch(){
   if(!lastStatus)return;
