@@ -16,6 +16,8 @@ import numpy as np, yaml
 D = os.path.dirname(os.path.abspath(__file__)); R = os.path.join(D, "..", "..")
 sys.path.insert(0, os.path.join(R, "correction", "comparaison"))
 from filtres import chain, rbj, butter_hp, FS
+sys.path.insert(0, D)
+from cible import cible_db
 
 a = sys.argv[1:]
 opt = lambda k, d: float(a[a.index(k) + 1]) if k in a else d
@@ -42,10 +44,7 @@ def db(h): return 20 * np.log10(np.abs(h) + 1e-12)
 
 REF = (f >= 200) & (f <= 500)
 # ---- cible relative (0 dB = niveau 200-500 Hz) ----
-cible = db(rbj({"type": "Peaking", "freq": 58, "gain": BOSSE, "q": 0.8}, f)) \
-    + db(rbj({"type": "Lowshelf", "freq": 110, "gain": 4.0, "q": 0.6}, f)) \
-    + db(butter_hp(32, 4, f))
-cible -= np.mean(cible[REF])
+cible = cible_db(f, BOSSE)
 
 
 def min_phase(mag_db):
