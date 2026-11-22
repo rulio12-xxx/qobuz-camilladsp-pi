@@ -5,6 +5,12 @@ cp ~/camilladsp/configs/camilladsp-qobuz.yml     camilladsp/
 cp ~/camilladsp/configs/camilladsp-bluetooth.yml camilladsp/
 cp ~/camilladsp/configs/camilladsp-fichiers.yml camilladsp/
 cp ~/camilladsp/configs/camilladsp.yml           camilladsp/
+cp ~/camilladsp/configs/camilladsp-cd.yml        camilladsp/ 2>/dev/null
+cp ~/camilladsp/configs/camilladsp-vinyle.yml    camilladsp/ 2>/dev/null
+
+# filtres FIR de correction (phase du grave), cf. correction/README.md
+mkdir -p mesure/fir
+cp ~/camilladsp/fir/*.raw                        mesure/fir/ 2>/dev/null
 
 cp ~/audio-power/audio-power-monitor.py power/
 cp ~/audiohub-selector.py               selector/ 2>/dev/null

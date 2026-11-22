@@ -95,6 +95,8 @@ n'expose aucune route de volume.
 - `loudness/loudness.py` : loudness automatique
 - `tube/` : generation des configs avec etage lampes
 - `camilladsp/*.yml` : configs actives ; `*.avant-tube` : references
+- `correction/` : index de la correction des enceintes (fichiers, methode, reglages de reference)
+- `mesure/` : scripts de mesure et de generation des filtres, FIR, resultats
 - `radio/` : mpd.conf, logos.sh, logos des stations
 - `hub/audio-hub.py` : interface web
 - `systemd/` : unites
