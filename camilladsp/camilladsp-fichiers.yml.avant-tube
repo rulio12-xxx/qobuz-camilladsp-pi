@@ -23,7 +23,7 @@ devices:
 filters:
   notch_42_L:
     type: Biquad
-    description: creux recurrents (22/11/2026)
+    description: creux recurrents (22/11/2026, renforce a l'ecoute)
     parameters:
       type: Peaking
       freq: 42
@@ -31,47 +31,47 @@ filters:
       q: 8.0
   creux_L_80:
     type: Biquad
-    description: creux recurrents (22/11/2026)
+    description: creux recurrents (22/11/2026, renforce a l'ecoute)
     parameters:
       type: Peaking
       freq: 80
-      gain: 4.0
+      gain: 8.0
       q: 6.0
   creux_L_120:
     type: Biquad
-    description: creux recurrents (22/11/2026)
+    description: creux recurrents (22/11/2026, renforce a l'ecoute)
     parameters:
       type: Peaking
       freq: 120
-      gain: 5.0
+      gain: 9.0
       q: 6.0
   creux_R_47:
     type: Biquad
-    description: creux recurrents (22/11/2026)
+    description: creux recurrents (22/11/2026, renforce a l'ecoute)
     parameters:
       type: Peaking
       freq: 47
-      gain: 4.0
+      gain: 8.0
       q: 3.0
   creux_R_130:
     type: Biquad
-    description: creux recurrents (22/11/2026)
+    description: creux recurrents (22/11/2026, renforce a l'ecoute)
     parameters:
       type: Peaking
       freq: 130
-      gain: 5.0
+      gain: 9.0
       q: 5.0
   creux_R_182:
     type: Biquad
-    description: creux recurrents (22/11/2026)
+    description: creux recurrents (22/11/2026, renforce a l'ecoute)
     parameters:
       type: Peaking
       freq: 182
-      gain: 6.0
+      gain: 10.0
       q: 6.0
   bosse_R_104:
     type: Biquad
-    description: creux recurrents (22/11/2026)
+    description: creux recurrents (22/11/2026, renforce a l'ecoute)
     parameters:
       type: Peaking
       freq: 104
@@ -79,7 +79,7 @@ filters:
       q: 4.0
   bosse_R_152:
     type: Biquad
-    description: creux recurrents (22/11/2026)
+    description: creux recurrents (22/11/2026, renforce a l'ecoute)
     parameters:
       type: Peaking
       freq: 152

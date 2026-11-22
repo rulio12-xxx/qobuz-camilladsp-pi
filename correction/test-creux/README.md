@@ -50,3 +50,15 @@ Sur la Pi, copier le fichier dans `~/camilladsp/configs/`, puis le charger dans 
 CamillaDSP (camillagui) ; revenir avec `camilladsp-qobuz.yml`, ou changer de source (le
 selecteur recharge la config normale). Ensuite remesurer :
 `cd ~/audiohub/mesure && python3 ir2.py mesure test-creux` et comparer a `k0_origine`.
+
+## Adopte et renforce (22/11/2026, apres-midi)
+
+Valide a l'ecoute (« on garde »), puis renforce deux fois de +2 dB a la demande :
+creux_L_80 +8, creux_L_120 +9, creux_R_47 +8, creux_R_130 +9, creux_R_182 +10 dB
+(frequences, Q et bosses inchanges). Ecrit dans les 6 configs et les 3 `*.avant-tube`.
+
+- Saturation : 0 echantillon ecrete sur 30 s de Qobuz ; crete de sortie -34 / -33 dBFS au
+  volume -22 (entree a -0,1 dBFS). Gain d'EQ maxi : D 64 Hz +12 dB (ancien renfort), G 120 Hz +9,9 dB.
+- Effet calcule (ecart-type 40-300 Hz) : G 6,7 -> 5,2 (+4/+5) -> 5,6 (+8/+9) : la gauche
+  depasse vers 80 et 127 Hz (+3,6 / +4,7 dB) ; D 7,2 -> 5,7 -> 5,2. Si la gauche parait
+  trop grasse : creux_L_80 +4, creux_L_120 +5.

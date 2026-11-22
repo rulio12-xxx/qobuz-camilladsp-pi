@@ -7,8 +7,8 @@ Modifie camilladsp{,-qobuz,-fichiers,-bluetooth,-cd,-vinyle}.yml et les *.avant-
 (base des lampes) presents dans le dossier, en gardant la mise en forme :
 - mode50_cut_L : 50 Hz -10 dB -> 55 Hz -7 dB
 - voie G : notch_64 retire, notch_42 remplace par notch_42_L (-4 dB Q8),
-  + creux_L_80 (+4 Q6), creux_L_120 (+5 Q6) avant delay_L
-- voie D : + creux_R_130 (+5 Q5), creux_R_182 (+6 Q6), creux_R_47 (+4 Q3),
+  + creux_L_80 (+8 Q6), creux_L_120 (+9 Q6) avant delay_L
+- voie D : + creux_R_130 (+9 Q5), creux_R_182 (+10 Q6), creux_R_47 (+8 Q3),
   bosse_R_152 (-7 Q6), bosse_R_104 (-5 Q4) avant delay_R
 Un fichier deja modifie (filtre creux_L_80 present) est ignore.
 """
@@ -20,8 +20,8 @@ NOMS = ["camilladsp.yml", "camilladsp-qobuz.yml", "camilladsp-fichiers.yml",
         "camilladsp-bluetooth.yml", "camilladsp-cd.yml", "camilladsp-vinyle.yml",
         "camilladsp-qobuz.yml.avant-tube", "camilladsp-fichiers.yml.avant-tube",
         "camilladsp-bluetooth.yml.avant-tube"]
-NOUVEAUX = [("notch_42_L", 42, -4.0, 8.0), ("creux_L_80", 80, 4.0, 6.0), ("creux_L_120", 120, 5.0, 6.0),
-            ("creux_R_47", 47, 4.0, 3.0), ("creux_R_130", 130, 5.0, 5.0), ("creux_R_182", 182, 6.0, 6.0),
+NOUVEAUX = [("notch_42_L", 42, -4.0, 8.0), ("creux_L_80", 80, 8.0, 6.0), ("creux_L_120", 120, 9.0, 6.0),
+            ("creux_R_47", 47, 8.0, 3.0), ("creux_R_130", 130, 9.0, 5.0), ("creux_R_182", 182, 10.0, 6.0),
             ("bosse_R_104", 104, -5.0, 4.0), ("bosse_R_152", 152, -7.0, 6.0)]
 G = ["notch_42_L", "creux_L_80", "creux_L_120"]
 D = ["creux_R_47", "creux_R_130", "creux_R_182", "bosse_R_104", "bosse_R_152"]
