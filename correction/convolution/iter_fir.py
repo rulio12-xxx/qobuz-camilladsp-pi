@@ -16,6 +16,11 @@ A chaque tour : mesurer avec le FIR actif (`mesure/ir2.py mesure <etiquette>`), 
   ~/camilladsp/configs/camilladsp-qobuz-test-fir.yml (nouveaux noms : CamillaDSP relit le FIR au reload) ;
 - garde l'historique dans iterations/etat.json et trace iterations/iter_<n>.png.
 
+Options : --nom <prefixe> (fichiers <prefixe>_{L,R}_i<n>.raw, etat iterations/etat_<prefixe>.json),
+--kick <dB> (bosse 78 Hz Q1,4 ajoutee a la cible), --clic <dB> (renfort 4,5 kHz Q1 applique une fois),
+--lissage <n> (mesure en 1/n octave, 6 par defaut ; 12 pour affiner).
+Le premier tour d'un nouveau --nom part du FIR actif de la mesure (ex. le FIR sans kick affine).
+
 Recharger ensuite la config (set_file_path + reload) avant la mesure suivante.
 --sim : simulation hors ligne (mesure = reponse du 18/11 x FIR), pour tester le script.
 """
@@ -29,14 +34,20 @@ from cible import cible_db
 a = sys.argv[1:]
 opt = lambda k, d: float(a[a.index(k) + 1]) if k in a else d
 LABEL = a[0]; ALPHA = opt("--alpha", 0.7); SIM = "--sim" in a
+KICK = opt("--kick", 0.0)        # dB : bosse du kick ajoutee a la cible (Peaking 78 Hz Q1,4)
+CLIC = opt("--clic", 0.0)        # dB : renfort fixe du clic (Peaking 4,5 kHz Q1), hors iteration
+LISSAGE = opt("--lissage", 6.0)  # mesure lissee en 1/LISSAGE octave
+NOM = a[a.index("--nom") + 1] if "--nom" in a else "cible"   # prefixe des fichiers FIR et de l'etat
 TAPS = 16384; N = 1 << 17
 CAP_REL, CUT_REL, CRETE_MAX = 22.0, -25.0, 0.0   # crete : le volume (<= -20 dB) laisse la marge
 FIRDIR = os.path.expanduser("~/camilladsp/fir"); CFG = os.path.expanduser("~/camilladsp/configs/camilladsp-qobuz-test-fir.yml")
 IT = os.path.join(D, "iterations"); os.makedirs(IT, exist_ok=True)
-ETAT = os.path.join(IT, "etat.json")
+ETAT = os.path.join(IT, "etat.json" if NOM == "cible" else f"etat_{NOM}.json")
 f = np.fft.rfftfreq(N, 1 / FS); f1 = f.copy(); f1[0] = 1e-3
 REF = (f >= 200) & (f <= 500); SEL = (f >= 38) & (f <= 300)
 cible = cible_db(f)
+if KICK:
+    cible = cible + 20 * np.log10(np.abs(rbj({"type": "Peaking", "freq": 78, "gain": KICK, "q": 1.4}, f)))
 db = lambda h: 20 * np.log10(np.abs(h) + 1e-12)
 
 
@@ -83,10 +94,12 @@ courbes = {}
 w = np.clip((f - 38) / 6, 0, 1) * (0.5 + 0.5 * np.cos(np.pi * np.clip(np.log(f1 / 250) / np.log(400 / 250), 0, 1)))
 G = {}
 for ch in "LR":
-    m = smooth_db(db(meas[ch]), 1 / 6); m -= np.mean(m[REF])
+    m = smooth_db(db(meas[ch]), 1 / LISSAGE); m -= np.mean(m[REF])
     err = cible - m
     g = db(np.fft.rfft(fir_cur[ch], N))
     gn = g + ALPHA * err * w
+    if CLIC and not etat.get("clic_fait"):
+        gn = gn + 20 * np.log10(np.abs(rbj({"type": "Peaking", "freq": 4500, "gain": CLIC, "q": 1.0}, f)))
     med = np.mean(gn[(f >= 400) & (f <= 1000)])
     gn = np.clip(gn, med + CUT_REL, med + CAP_REL)
     G[ch] = gn
@@ -99,7 +112,7 @@ baisse = min(0.0, CRETE_MAX - crete)
 out["baisse_niveau_db"] = round(baisse, 2)
 for ch in "LR":
     h = min_phase(G[ch] + baisse).astype("<f4")
-    fn = (os.path.join(IT, f"sim_{ch}_i{n + 1}.raw") if SIM else os.path.join(FIRDIR, f"cible_{ch}_i{n + 1}.raw"))
+    fn = (os.path.join(IT, f"sim_{NOM}_{ch}_i{n + 1}.raw") if SIM else os.path.join(FIRDIR, f"{NOM}_{ch}_i{n + 1}.raw"))
     h.tofile(fn); out["fichiers"][ch] = fn
     out["voies"][ch]["crete_fir_dbfs"] = round(float(db(np.fft.rfft(h.astype(float), N))[f < 20000].max()), 1)
 
@@ -108,6 +121,8 @@ grid = [20 * 2 ** (k / 24) for k in range(0, 24 * 6) if 20 * 2 ** (k / 24) <= 10
 gi = [int(np.argmin(abs(f - x))) for x in grid]
 out["courbes"] = {ch: [round(float(courbes[ch][j]), 2) for j in gi] for ch in "LR"}
 out["grille"] = [round(x, 2) for x in grid]
+if CLIC: etat["clic_fait"] = True
+out.update(kick=KICK, clic=CLIC, lissage=LISSAGE)
 etat["iterations"].append(out); json.dump(etat, open(ETAT, "w"))
 if not SIM:
     y = yaml.safe_load(open(CFG))
@@ -138,5 +153,5 @@ for j, (ch, nom) in enumerate((("L", "Gauche"), ("R", "Droite"))):
     A.grid(True, color="#e6e6e3", lw=0.6); A.set_xlabel("Hz"); A.legend(fontsize=8.5, frameon=False, loc="lower right")
     for s in ("top", "right"): A.spines[s].set_visible(False)
 ax[0].set_ylabel("dB")
-fig.suptitle(f"Convolution vers la cible : iteration {n} (ecart-type 38-300 Hz)", fontsize=12)
-fig.tight_layout(); fig.savefig(os.path.join(IT, f"{'sim_' if SIM else ''}iter_{n}.png"), dpi=120)
+fig.suptitle(f"Convolution vers la cible{' + kick ' + str(KICK) + ' dB' if KICK else ''} : iteration {n} (ecart-type 38-300 Hz)", fontsize=12)
+fig.tight_layout(); fig.savefig(os.path.join(IT, f"{'sim_' if SIM else ''}{'' if NOM == 'cible' else NOM + '_'}iter_{n}.png"), dpi=120)
