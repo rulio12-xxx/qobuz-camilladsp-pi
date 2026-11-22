@@ -72,6 +72,8 @@ sa config, reappliques par l'interface) : bouton Kick a trois niveaux dans
    les `*.avant-tube` (`persiste.py` le fait).
 
 Details des mesures et des pieges : `mesure/README.md`.
+Tous les renforts / variantes du grave essayes, avec leurs valeurs : `variantes_grave.md`
+(regenerable avec `historique_grave.py`).
 
 ## Garder le Pi et git synchronises
 
