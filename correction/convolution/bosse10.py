@@ -5,6 +5,7 @@ Ecrit final/fir_{L,R}_{sanskick,kick}_b10.raw.
     python3 correction/convolution/bosse10.py            # +10 dB (b10)
     python3 correction/convolution/bosse10.py 4.0 b7    # +7 dB (b7)
     python3 correction/convolution/bosse10.py 4.5 b7f66 70   # +7 dB, sommet 66 Hz au lieu de 56
+    python3 correction/convolution/bosse10.py 5.0 b7f76 82   # +7 dB, sommet 76 Hz
 """
 import os, sys
 import numpy as np
