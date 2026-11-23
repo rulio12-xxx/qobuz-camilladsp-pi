@@ -1,5 +1,6 @@
 title: Qobuz - correction par convolution (FIR kick, 22/11/2026)
-description: 'FIR vers la cible (grave fort), mesures successives a -40 dB ; bouton Kick bascule FIR kick / sans kick. Avant : *.avant-fir-2026-11-22'
+description: 'FIR vers la cible (grave fort) ; lampes AVANT le FIR (23/11 : le grave du FIR faisait pomper l aigu), crete totale -6 dBFS. Bouton Kick : FIR kick / sans kick. Avant : *.avant-fir-2026-11-22,
+  *.avant-lampes-avant-fir-2026-11-23'
 devices:
   samplerate: 44100
   chunksize: 2048
@@ -67,6 +68,11 @@ filters:
       type: Raw
       filename: /home/rulio12/camilladsp/fir/fir_R_kick.raw
       format: F32_LE
+  preamp:
+    type: Gain
+    description: 'niveau avant les lampes (23/11/2026) : le compresseur voit la musique sans le grave du FIR'
+    parameters:
+      gain: -20.5
 processors:
   tube:
     type: Compressor
@@ -86,16 +92,24 @@ pipeline:
       - delay_L
       - loud_bass
       - loud_treble
-      - fir_L
+      - preamp
   - type: Filter
     channels: [1]
     names:
       - delay_R
       - loud_bass
       - loud_treble
-      - fir_R
+      - preamp
   - type: Processor
     name: tube
+  - type: Filter
+    channels: [0]
+    names:
+      - fir_L
+  - type: Filter
+    channels: [1]
+    names:
+      - fir_R
   - type: Filter
     channels: [0, 1]
     names:

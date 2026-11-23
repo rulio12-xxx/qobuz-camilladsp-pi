@@ -74,14 +74,21 @@ def main():
             "      soft_clip: true",
         ]
     out.append("pipeline:")
-    for ch, names in branches:
+    # 23/11 : en convolution, les lampes passent AVANT les FIR (fir_*) : sinon le grave
+    # renforce par le FIR pilote le compresseur et fait pomper l aigu.
+    tube = ["  - type: Processor", "    name: tube"] if level != 0 else []
+    i_fir = next((k for k, (ch, names) in enumerate(branches)
+                  if any(nm.startswith("fir_") for nm in names)), len(branches))
+    for k, (ch, names) in enumerate(branches):
+        if k == i_fir:
+            out += tube
         out.append("  - type: Filter")
         out.append("    " + (ch if ch else "channels: [0]"))
         out.append("    names:")
         for nm in names:
             out.append("      - " + nm)
-    if level != 0:
-        out += ["  - type: Processor", "    name: tube"]
+    if i_fir == len(branches):
+        out += tube
     out += ["  - type: Filter", "    channels: [0, 1]", "    names:", "      - limiter"]
 
     open(dst, "w").write("\n".join(out) + "\n")
