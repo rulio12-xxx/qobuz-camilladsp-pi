@@ -4,6 +4,7 @@ Ecrit final/fir_{L,R}_{sanskick,kick}_b10.raw.
 
     python3 correction/convolution/bosse10.py            # +10 dB (b10)
     python3 correction/convolution/bosse10.py 4.0 b7    # +7 dB (b7)
+    python3 correction/convolution/bosse10.py 4.5 b7f66 70   # +7 dB, sommet 66 Hz au lieu de 56
 """
 import os, sys
 import numpy as np
@@ -13,7 +14,8 @@ from cible import cible_db
 FS = 44100; NN = 1 << 17; f = np.fft.rfftfreq(NN, 1 / FS)
 BOSSE = float(sys.argv[1]) if len(sys.argv) > 1 else 7.25   # 7,25 -> +10 dB ; 4,0 -> +7 dB
 SUF = sys.argv[2] if len(sys.argv) > 2 else "b10"
-ratio = cible_db(f, BOSSE) - cible_db(f, 11.0)
+FB = float(sys.argv[3]) if len(sys.argv) > 3 else 58.0   # frequence de la bosse
+ratio = cible_db(f, BOSSE, FB) - cible_db(f, 11.0)
 db = lambda h: 20 * np.log10(np.abs(np.fft.rfft(h, NN)) + 1e-12)
 for v in ("sanskick", "kick"):
     for ch in "LR":
