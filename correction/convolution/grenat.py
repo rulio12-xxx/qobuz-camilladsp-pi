@@ -7,6 +7,7 @@ Depart : FIR actifs *_b7f76 ; prevision = mesure verif_bouton_sans x (FIR / FIR 
 Delta = cible - prevision (lisse 1/6 oct.), applique aux FIR sans kick et kick (meme delta).
 
     python3 correction/convolution/grenat.py   -> final/fir_{L,R}_{sanskick,kick}_grenat.raw, grenat.png
+    python3 correction/convolution/grenat.py --sous40   -> *_grenat40.raw, grenat40.png : aucun renfort sous 40 Hz
 """
 import os, sys
 import numpy as np
@@ -34,6 +35,7 @@ def min_phase(G, n):
     return h
 
 
+SOUS40 = "--sous40" in sys.argv; SUF = "grenat40" if SOUS40 else "grenat"
 w = np.clip((f - 38) / 6, 0, 1) * (0.5 + 0.5 * np.cos(np.pi * np.clip(np.log(f1 / 400) / np.log(480 / 400), 0, 1)))
 z = np.load(os.path.join(R, "mesure/resultats/ir/verif_bouton_sans.npz"))
 res = {}
@@ -44,7 +46,10 @@ for ch in "LR":
     for v in ("sanskick", "kick"):
         h0 = np.fromfile(os.path.join(D, "final", f"fir_{ch}_{v}_b7f76.raw"), "<f4").astype(float)
         G = db(np.fft.rfft(h0, N)) + delta
-        h = min_phase(G, len(h0)); h.astype("<f4").tofile(os.path.join(D, "final", f"fir_{ch}_{v}_grenat.raw"))
+        if SOUS40:   # aucun renfort sous 40 Hz : FIR plafonne au niveau de son medium, rampe 40-46 Hz
+            med = np.mean(G[(f >= 400) & (f <= 1000)])
+            G = np.minimum(G, np.where(f < 40, med, np.where(f < 46, med + (G.max() - med) * (f - 40) / 6, np.inf)))
+        h = min_phase(G, len(h0)); h.astype("<f4").tofile(os.path.join(D, "final", f"fir_{ch}_{v}_{SUF}.raw"))
         if v == "sanskick":
             apres = smooth_db(db(base * np.fft.rfft(h, N)), 1 / 6) - off   # meme recalage qu'avant (rien ne bouge au-dessus de 480 Hz)
             res[ch] = (avant, apres)
@@ -58,7 +63,7 @@ for j, (ch, nom) in enumerate((("L", "Gauche"), ("R", "Droite"))):
     a, b = res[ch]; m = (f >= 38) & (f <= 480)
     ax[j].plot(f[m], cible[m], color="#9b2335", lw=7, alpha=0.45, solid_capstyle="round", label="Trait grenat (cible)")
     ax[j].plot(f[1:], a[1:], color="#8a8a85", lw=1.4, ls="--", label="Avant : bosse +7 dB a 76 Hz")
-    ax[j].plot(f[1:], b[1:], color="#2a78d6", lw=2.0, label="FIR vers le trait grenat")
+    ax[j].plot(f[1:], b[1:], color="#2a78d6", lw=2.0, label="FIR vers le trait grenat" + (", rien sous 40 Hz" if SOUS40 else ""))
     ax[j].set_title(f"{nom} : reponse attendue a la place d'ecoute (FIR sans kick, 1/6 oct.)")
     ax[j].set_xscale("log"); ax[j].set_xlim(20, 1000); ax[j].set_ylim(-25, 20); ax[j].axhline(0, color="#bbb", lw=0.8)
     t = [20, 30, 40, 50, 60, 80, 100, 150, 200, 300, 500, 1000]
@@ -68,4 +73,5 @@ for j, (ch, nom) in enumerate((("L", "Gauche"), ("R", "Droite"))):
 ax[0].set_ylabel("dB")
 h_, l_ = ax[0].get_legend_handles_labels(); fig.legend(h_, l_, loc="lower center", ncol=3, fontsize=10, frameon=False)
 fig.suptitle("Cible « trait grenat » (version kick = meme grave, +0,8 dB entre 2 et 10 kHz)", fontsize=12)
-fig.tight_layout(rect=(0, 0.06, 1, 1)); fig.savefig(os.path.join(D, "grenat.png"), dpi=130)
+fig.tight_layout(rect=(0, 0.06, 1, 1)); [a_.axvline(40, color="#9b2335", lw=0.8, ls="--") for a_ in ax] if SOUS40 else None
+fig.savefig(os.path.join(D, f"{SUF}.png"), dpi=130)
