@@ -1,0 +1,25 @@
+"""Test (23/11/2026, demande de Rulio12) : bosse principale du grave a +10 dB au-dessus du medium au lieu de +13.
+FIR = FIR final x (cible bosse 7,25 / cible bosse 11), reconstruit en phase minimale, sans mesure.
+Ecrit final/fir_{L,R}_{sanskick,kick}_b10.raw.
+
+    python3 correction/convolution/bosse10.py
+"""
+import os, sys
+import numpy as np
+D = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.join(D, "..", "comparaison")); sys.path.insert(0, D)
+from cible import cible_db
+FS = 44100; NN = 1 << 17; f = np.fft.rfftfreq(NN, 1 / FS)
+ratio = cible_db(f, 7.25) - cible_db(f, 11.0)
+db = lambda h: 20 * np.log10(np.abs(np.fft.rfft(h, NN)) + 1e-12)
+for v in ("sanskick", "kick"):
+    for ch in "LR":
+        h = np.fromfile(os.path.join(D, "final", f"fir_{ch}_{v}.raw"), "<f4").astype(float); n = len(h)
+        G = db(h) + ratio
+        c = np.fft.irfft(np.log(10 ** (G / 20)), NN); w = np.zeros(NN); w[0] = 1; w[1:NN // 2] = 2; w[NN // 2] = 1
+        h2 = np.fft.irfft(np.exp(np.fft.rfft(c * w, NN)), NN)[:n]
+        fade = n // 8; h2[-fade:] *= 0.5 * (1 + np.cos(np.linspace(0, np.pi, fade)))
+        h2.astype("<f4").tofile(os.path.join(D, "final", f"fir_{ch}_{v}_b10.raw"))
+        d = db(h2) - db(h)
+        print(v, ch, [(x, round(float(d[np.argmin(abs(f - x))]), 1)) for x in (30, 40, 50, 58, 70, 100, 150, 200, 500, 5000)],
+              "crete", round(float(db(h2)[f < 20000].max()) - 20.5, 1))
