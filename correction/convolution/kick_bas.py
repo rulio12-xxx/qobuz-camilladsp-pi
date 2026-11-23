@@ -1,4 +1,7 @@
-"""FIR kick « bas » (23/11/2026) : la bosse du kick reste sous 100 Hz.
+"""--aigu-seul (23/11 soir) : grave identique a la version sans kick, seulement la rehausse du clic
+2-10 kHz (Peaking 4,5 kHz +1,5 dB Q1). Sous 38 Hz : FIR plafonne au niveau du medium (aucun renfort), rampe 38-44 Hz.
+
+FIR kick « bas » (23/11/2026) : la bosse du kick reste sous 100 Hz.
 
 Rulio12 trouvait genant le renfort 100-150 Hz du FIR kick. Ici, pas de nouvelle mesure :
 FIR kick = FIR sans kick (final/) x Peaking 65 Hz +3,5 dB Q3 (crete totale <= -3 dBFS) x clic 4,5 kHz +1,5 dB Q1.
@@ -26,13 +29,23 @@ def lfilter(b, a, x):
     return y
 
 
-KICK = (65.0, 3.5, 3.0); CLIC = (4500.0, 1.5, 1.0)
+import sys as _s
+KICK = (65.0, 3.5, 3.0) if "--aigu-seul" not in _s.argv else (65.0, 0.0, 3.0); CLIC = (4500.0, 1.5, 1.0)
 for ch in "LR":
     old = os.path.join(D, "final", f"fir_{ch}_kick.raw"); keep = os.path.join(D, "final", f"fir_{ch}_kick_78hz.raw")
     if not os.path.exists(keep): shutil.copy(old, keep)
     h = np.fromfile(os.path.join(D, "final", f"fir_{ch}_sanskick.raw"), "<f4").astype(float)
     for p in (KICK, CLIC): h = lfilter(*biquad_coefs(*p), h)
     fade = len(h) // 8; h[-fade:] *= 0.5 * (1 + np.cos(np.linspace(0, np.pi, fade)))
+    if "--aigu-seul" in sys.argv:
+        # rien au-dessus du niveau du medium sous 38 Hz (rampe 38-44 Hz), reconstruit en phase minimale
+        NN = 1 << 17; ff = np.fft.rfftfreq(NN, 1 / FS); G = 20 * np.log10(np.abs(np.fft.rfft(h, NN)) + 1e-12)
+        med = np.mean(G[(ff >= 400) & (ff <= 1000)])
+        cap = np.where(ff < 38, med, np.where(ff < 44, med + (G.max() - med) * (ff - 38) / 6, np.inf))
+        G = np.minimum(G, cap)
+        c = np.fft.irfft(np.log(10 ** (G / 20)), NN); w = np.zeros(NN); w[0] = 1; w[1:NN // 2] = 2; w[NN // 2] = 1
+        h = np.fft.irfft(np.exp(np.fft.rfft(c * w, NN)), NN)[:len(h)]
+        h[-fade:] *= 0.5 * (1 + np.cos(np.linspace(0, np.pi, fade)))
     h.astype("<f4").tofile(old)
     N = 1 << 17; f = np.fft.rfftfreq(N, 1 / FS); db = lambda x: 20 * np.log10(np.abs(np.fft.rfft(x, N)) + 1e-12)
     s = np.fromfile(os.path.join(D, "final", f"fir_{ch}_sanskick.raw"), "<f4").astype(float)
