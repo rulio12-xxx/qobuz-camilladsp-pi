@@ -130,7 +130,15 @@ def bande(f, y, i0, chute):
     return float(f[lo]), float(f[hi])
 
 # ---------------------------------------------------------------- theorie
+REMPLISSAGE = {'aucun': 1.00, 'parois': 1.05, 'partiel': 1.10, 'plein': 1.15}
+# volume apparent : un rembourrage rend la compression de l'air plus isotherme
+# (ordre de grandeur classique : jusqu'a +15 % environ caisse pleine)
+
 def theorie(a):
+    """Accord theorique. Event a bords arrondis : --l-event = longueur TOTALE bord a bord,
+    --rayon-bords = rayon des arrondis (mm), --bords-arrondis = 0, 1 ou 2 extremites.
+    La masse d'air est integree le long du profil (section qui s'evase dans les arrondis),
+    puis la correction d'extremite est appliquee sur le rayon de sortie evase."""
     if not (a.d_event and a.l_event and a.vb):
         return None
     n = a.n_event
@@ -140,14 +148,45 @@ def theorie(a):
     else:
         d_eq = a.d_event / 1000; sp1 = math.pi * d_eq ** 2 / 4
     sp = n * sp1
-    k_fin = {'2bords': 0.85 * 2, '1bord': 0.85 + 0.61, 'libre': 0.61 * 2}[a.terminaisons]
-    leff = a.l_event / 1000 + k_fin * d_eq / 2
-    vb = (a.vb - a.vd_litres) / 1000
+    a0 = d_eq / 2
+    lt = a.l_event / 1000
+    r = (a.rayon_bords or 0) / 1000
+    nb = a.bords_arrondis if r > 0 else 0
+    if 2 * r * nb / 2 > lt:
+        r = lt / max(nb, 1)
+    # longueur equivalente (rapportee a la section droite) : integrale de S0/S(x)
+    m = 2000
+    def l_arrondi():
+        x = (np.arange(m) + 0.5) / m * r                      # 0 = plan de sortie
+        ax = a0 + r - np.sqrt(np.maximum(r ** 2 - (r - x) ** 2, 0))
+        return float(np.sum((a0 / ax) ** 2) * r / m)
+    l_eq = (lt - nb * r) + nb * (l_arrondi() if nb else 0)
+    # corrections d'extremite : 0,85 a si colle a un panneau, 0,61 a si libre,
+    # sur le rayon de sortie (evase s'il y a un arrondi), ramenees a la section droite
+    coef = {'2bords': (0.85, 0.85), '1bord': (0.85, 0.61), 'libre': (0.61, 0.61)}[a.terminaisons]
+    corr = 0.0
+    for i_ext, c in enumerate(coef):
+        am = a0 + r if i_ext < nb else a0
+        corr += c * am * (a0 / am) ** 2
+    leff = l_eq + corr
+    vb_net = (a.vb - a.vd_litres) / 1000
+    fac = REMPLISSAGE[a.remplissage]
+    vb = vb_net * fac
     fb = C_SON / (2 * math.pi) * math.sqrt(sp / (vb * leff))
-    tuyau = [k * C_SON / (2 * leff) for k in (1, 2, 3)]
-    return dict(fb_theorique_hz=round(fb, 1), longueur_effective_mm=round(leff * 1000),
-                surface_event_cm2=round(sp * 1e4, 1), volume_net_l=round(vb * 1000, 1),
-                resonances_tuyau_prevues_hz=[round(x) for x in tuyau])
+    l_tuyau = lt + sum(c * (a0 + r if i < nb else a0) for i, c in enumerate(coef))
+    tuyau = [k * C_SON / (2 * l_tuyau) for k in (1, 2, 3)]
+    out = dict(fb_theorique_hz=round(fb, 1), longueur_effective_mm=round(leff * 1000),
+               longueur_totale_mm=round(lt * 1000), rayon_bords_mm=round(r * 1000), bords_arrondis=nb,
+               surface_event_cm2=round(sp * 1e4, 1), volume_net_l=round(vb_net * 1000, 1),
+               remplissage=a.remplissage, volume_apparent_l=round(vb * 1000, 1),
+               resonances_tuyau_prevues_hz=[round(x) for x in tuyau], avertissements=[])
+    if a.dist_mousse is not None and a.dist_mousse < a.d_event:
+        out['avertissements'].append(
+            'Rembourrage a %.0f mm de l entree interieure de l event (< 1 diametre) : '
+            'il freine l event, Fb et le niveau peuvent baisser' % a.dist_mousse)
+    if a.remplissage in ('partiel', 'plein') and a.dist_mousse is None:
+        out['avertissements'].append('Remplissage %s : preciser --dist-mousse (mm)' % a.remplissage)
+    return out
 
 # ---------------------------------------------------------------- analyse d'un cote
 def _plt():
@@ -327,6 +366,12 @@ def main(argv=None, mes=None):
     ap.add_argument('--n-event', type=int, default=1, help="nombre d'events par caisse")
     ap.add_argument('--vb', type=float, help='volume interieur brut de la caisse (litres)')
     ap.add_argument('--vd-litres', type=float, default=0, help='volume occupe par woofer, renforts, event (litres)')
+    ap.add_argument('--rayon-bords', type=float, default=0, help="rayon des bords arrondis de l'event (mm)")
+    ap.add_argument('--bords-arrondis', type=int, choices=[0, 1, 2], default=2,
+                    help="nombre d'extremites arrondies (avec --rayon-bords)")
+    ap.add_argument('--remplissage', choices=list(REMPLISSAGE), default='aucun',
+                    help='rembourrage : aucun, parois (parois garnies), partiel, plein')
+    ap.add_argument('--dist-mousse', type=float, help="distance rembourrage - entree interieure de l'event (mm)")
     ap.add_argument('--terminaisons', choices=['2bords', '1bord', 'libre'], default='1bord',
                     help="extremites de l'event : 2 bords colles a un panneau, 1 seul, ou aucun")
     ap.add_argument('--phase-minimale', action='store_true', help='ignorer la phase mesuree')
@@ -364,9 +409,13 @@ def main(argv=None, mes=None):
 
     L = ['# Resultats event bass-reflex', '']
     if th:
-        L += ['Theorie : Fb %.1f Hz, longueur effective %d mm, surface %.1f cm2, volume net %.1f l, '
-              'resonances de tuyau prevues %s Hz' % (th['fb_theorique_hz'], th['longueur_effective_mm'],
-              th['surface_event_cm2'], th['volume_net_l'], ', '.join(map(str, th['resonances_tuyau_prevues_hz']))), '']
+        L += ['Theorie : Fb %.1f Hz, longueur totale %d mm (arrondis R%d mm x %d), longueur effective %d mm, '
+              'surface %.1f cm2, volume net %.1f l, rembourrage %s (volume apparent %.1f l), '
+              'resonances de tuyau prevues %s Hz' % (th['fb_theorique_hz'], th['longueur_totale_mm'],
+              th['rayon_bords_mm'], th['bords_arrondis'], th['longueur_effective_mm'],
+              th['surface_event_cm2'], th['volume_net_l'], th['remplissage'], th['volume_apparent_l'],
+              ', '.join(map(str, th['resonances_tuyau_prevues_hz'])))]
+        L += ['- ATTENTION : ' + w for w in th['avertissements']] + ['']
     for c, r in res['cotes'].items():
         L.append('## Enceinte %s' % c)
         for k, v in r.items():

@@ -87,6 +87,11 @@ document "Protocole de mesure de l'event bass-reflex" (claude.ai).
 - Sorties dans `resultats/event/<session>/` : une reponse par mesure (.npz + .json),
   et `analyse/` (resume.md, resultats.json, courbes PNG si matplotlib est installe).
 - `event_analyse.py` lit aussi les fichiers REW (.mdat ou export texte).
+- Event a bords arrondis : `--l-event` = longueur TOTALE bord a bord, `--rayon-bords`
+  (mm) et `--bords-arrondis 1|2`. La masse d'air est integree le long du profil.
+- Rembourrage : `--remplissage aucun|parois|partiel|plein` (volume apparent +0/5/10/15 %)
+  et `--dist-mousse` (mm entre le rembourrage et l'entree interieure de l'event ;
+  alerte sous un diametre).
 
 Fort niveau (en journee) : paliers croissants sur l'event ou le woofer, micro en place.
 
