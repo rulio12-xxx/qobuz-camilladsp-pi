@@ -1,0 +1,109 @@
+devices:
+  samplerate: 44100
+  chunksize: 2048
+  queuelimit: 4
+  silence_threshold: -80
+  silence_timeout: 200
+  enable_rate_adjust: true
+  capture_samplerate: 44100
+  resampler:
+    type: AsyncSinc
+    profile: Balanced
+  capture:
+    type: Alsa
+    channels: 2
+    device: hw:10,1
+    format: F32_LE
+  playback:
+    type: Alsa
+    channels: 2
+    device: hw:CARD=II,DEV=0
+    format: S32_LE
+filters:
+  delay_L:
+    type: Delay
+    parameters:
+      delay: 1.2
+      unit: ms
+      subsample: true
+  delay_R:
+    type: Delay
+    parameters:
+      delay: 0
+      unit: ms
+      subsample: true
+  limiter:
+    type: Limiter
+    parameters:
+      clip_limit: -0.5
+      soft_clip: true
+  loud_bass:
+    type: Biquad
+    parameters:
+      type: Peaking
+      freq: 80
+      gain: 0.0
+      q: 4.0
+  loud_treble:
+    type: Biquad
+    parameters:
+      type: Peaking
+      freq: 3500
+      gain: 0.0
+      q: 1.2
+  fir_L:
+    type: Conv
+    description: correction du grave vers la cible (correction/convolution/cible_fir.py,
+      22/11/2026)
+    parameters:
+      type: Raw
+      filename: /home/rulio12/camilladsp/fir/cible_L_i2.raw
+      format: F32_LE
+  fir_R:
+    type: Conv
+    description: correction du grave vers la cible (correction/convolution/cible_fir.py,
+      22/11/2026)
+    parameters:
+      type: Raw
+      filename: /home/rulio12/camilladsp/fir/cible_R_i2.raw
+      format: F32_LE
+processors:
+  tube:
+    type: Compressor
+    parameters:
+      channels: 2
+      attack: 0.005
+      release: 0.05
+      threshold: -22
+      factor: 3.0
+      makeup_gain: 2.0
+      clip_limit: -0.3
+      soft_clip: true
+pipeline:
+- type: Filter
+  channels:
+  - 0
+  names:
+  - delay_L
+  - loud_bass
+  - loud_treble
+  - fir_L
+- type: Filter
+  channels:
+  - 1
+  names:
+  - delay_R
+  - loud_bass
+  - loud_treble
+  - fir_R
+- type: Processor
+  name: tube
+- type: Filter
+  channels:
+  - 0
+  - 1
+  names:
+  - limiter
+title: Qobuz - TEST convolution vers cible (forme REW3 D, grave exagere)
+description: 'FIR iteration 2 (iter_fir.py, mesure fir_i1) : mesure fir_i2 ecart 38-300
+  Hz G 1,33 / D 1,27 dB'

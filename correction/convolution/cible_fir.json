@@ -1,0 +1,18 @@
+{
+ "exag": 1.3,
+ "bosse": 11.0,
+ "taps": 16384,
+ "decalage_niveau_db": -0.5,
+ "voies": {
+  "L": {
+   "gain_max_db": -5.9,
+   "freq_gain_max": 45.1,
+   "ecart_cible_35_300": 3.72
+  },
+  "R": {
+   "gain_max_db": -6.0,
+   "freq_gain_max": 45.1,
+   "ecart_cible_35_300": 3.85
+  }
+ }
+}

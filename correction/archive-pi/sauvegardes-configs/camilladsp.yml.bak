@@ -1,0 +1,23 @@
+devices:
+  samplerate: 44100
+  chunksize: 4096
+  queuelimit: 4
+  silence_threshold: -80
+  silence_timeout: 200
+  enable_rate_adjust: true
+  capture_samplerate: 44100
+  resampler:
+    type: AsyncSinc
+    profile: Balanced
+  capture:
+    type: Alsa
+    channels: 2
+    device: "hw:10,1"
+    format: F32_LE
+  playback:
+    type: Alsa
+    channels: 2
+    device: "hw:2,0"
+    format: S32_LE
+
+pipeline: []

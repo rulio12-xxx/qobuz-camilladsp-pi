@@ -21,6 +21,70 @@ devices:
     format: S32_LE
 
 filters:
+  notch_42_L:
+    type: Biquad
+    description: creux recurrents (22/11/2026, renforce a l'ecoute)
+    parameters:
+      type: Peaking
+      freq: 42
+      gain: -4.0
+      q: 8.0
+  creux_L_80:
+    type: Biquad
+    description: creux recurrents (22/11/2026, renforce a l'ecoute)
+    parameters:
+      type: Peaking
+      freq: 80
+      gain: 8.0
+      q: 6.0
+  creux_L_120:
+    type: Biquad
+    description: creux recurrents (22/11/2026, renforce a l'ecoute)
+    parameters:
+      type: Peaking
+      freq: 120
+      gain: 9.0
+      q: 6.0
+  creux_R_47:
+    type: Biquad
+    description: creux recurrents (22/11/2026, renforce a l'ecoute)
+    parameters:
+      type: Peaking
+      freq: 47
+      gain: 8.0
+      q: 3.0
+  creux_R_130:
+    type: Biquad
+    description: creux recurrents (22/11/2026, renforce a l'ecoute)
+    parameters:
+      type: Peaking
+      freq: 130
+      gain: 9.0
+      q: 5.0
+  creux_R_182:
+    type: Biquad
+    description: creux recurrents (22/11/2026, renforce a l'ecoute)
+    parameters:
+      type: Peaking
+      freq: 182
+      gain: 10.0
+      q: 6.0
+  bosse_R_104:
+    type: Biquad
+    description: creux recurrents (22/11/2026, renforce a l'ecoute)
+    parameters:
+      type: Peaking
+      freq: 104
+      gain: -5.0
+      q: 4.0
+  bosse_R_152:
+    type: Biquad
+    description: creux recurrents (22/11/2026, renforce a l'ecoute)
+    parameters:
+      type: Peaking
+      freq: 152
+      gain: -7.0
+      q: 6.0
   aigu_pente:
     type: Biquad
     description: pente douce dans l'aigu (demande du 20/11/2026)
@@ -82,8 +146,8 @@ filters:
     type: Biquad
     parameters:
       type: Peaking
-      freq: 50
-      gain: -10.0
+      freq: 55
+      gain: -7.0
       q: 4.5
   kick_fill_R:
     type: Biquad
@@ -357,8 +421,6 @@ pipeline:
     names:
       - preamp
       - mode50_cut_L
-      - notch_42
-      - notch_64
       - kick_body_L
       - click_boost
       - filterL_1
@@ -379,6 +441,9 @@ pipeline:
       - filterL_16
       - treble_air
       - balance_L
+      - notch_42_L
+      - creux_L_80
+      - creux_L_120
       - delay_L
       - loud_bass
       - loud_treble
@@ -408,6 +473,11 @@ pipeline:
       - filterR_12
       - treble_air
       - kick
+      - creux_R_47
+      - creux_R_130
+      - creux_R_182
+      - bosse_R_104
+      - bosse_R_152
       - delay_R
       - loud_bass
       - loud_treble

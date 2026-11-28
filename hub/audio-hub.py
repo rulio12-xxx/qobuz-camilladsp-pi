@@ -131,6 +131,7 @@ def status_json():
                        "loud": loud_enabled(),
                        "kickbody": kickbody_enabled(),
                        "kick": kick_niveau(),
+                       "kick_fir": _KICK_FIR[0],
                        "notch": notch_enabled(),
                        "phase": phase_state(),
                        "vol": vol})
@@ -212,14 +213,29 @@ KICK_NIVEAUX = {"sans": (0.0, 0.0), "avec": (4.0, 3.5), "double": (10.0, 9.5)}
 KICK_ORDRE = ["sans", "avec", "double"]
 
 
+# 22/11 : correction par convolution. Si la config active a les filtres fir_L / fir_R,
+# le bouton bascule entre deux FIR complets (grave fort dans les deux cas) :
+# « sans » = FIR sans kick, « avec » = FIR kick. Fichiers dans ~/camilladsp/fir/.
+FIR_DIR = "/home/rulio12/camilladsp/fir"
+FIR_KICK = {"sans": "fir_{}_sanskick.raw", "avec": "fir_{}_kick.raw"}
+_KICK_FIR = [False]   # mis a jour par kick_niveau() : config active en mode FIR ?
+
+
+def _cdsp(code):
+    head = "from camilladsp import CamillaClient\nc = CamillaClient('127.0.0.1', 1234)\nc.connect()\n"
+    return subprocess.run([VENV_PY, "-c", head + code], capture_output=True, text=True, timeout=5)
+
+
 def kick_niveau():
-    """niveau actuel, lu en direct dans CamillaDSP (le plus proche des trois)."""
-    code = ("from camilladsp import CamillaClient\n"
-            "c = CamillaClient('127.0.0.1', 1234)\nc.connect()\n"
-            "print(c.config.active()['filters']['kick_body_L']['parameters']['gain'])\n")
+    """niveau actuel, lu en direct dans CamillaDSP."""
+    code = ("f = c.config.active()['filters']\n"
+            "print(f['fir_L']['parameters']['filename'] if 'fir_L' in f else f['kick_body_L']['parameters']['gain'])\n")
     try:
-        r = subprocess.run([VENV_PY, "-c", code], capture_output=True, text=True, timeout=5)
-        g = float(r.stdout.strip())
+        v = _cdsp(code).stdout.strip()
+        _KICK_FIR[0] = v.endswith(".raw")
+        if v.endswith(".raw"):
+            return "avec" if v.endswith("_kick.raw") else "sans"
+        g = float(v)
         return min(KICK_NIVEAUX, key=lambda k: abs(KICK_NIVEAUX[k][0] - g))
     except Exception:
         return None
@@ -233,12 +249,15 @@ def set_kick(niveau):
     if niveau not in KICK_NIVEAUX:
         return
     gain_l, gain_r = KICK_NIVEAUX[niveau]
-    code = ("from camilladsp import CamillaClient\n"
-            "c = CamillaClient('127.0.0.1', 1234)\n"
-            "c.connect()\n"
-            f"c.config.set_value('/filters/kick_body_L/parameters/gain', {gain_l})\n"
-            f"c.config.set_value('/filters/kick_body_R/parameters/gain', {gain_r})\n")
-    subprocess.run([VENV_PY, "-c", code], capture_output=True, timeout=5)
+    fir = {ch: os.path.join(FIR_DIR, FIR_KICK["sans" if niveau == "sans" else "avec"].format(ch)) for ch in "LR"}
+    code = ("f = c.config.active()['filters']\n"
+            "if 'fir_L' in f:\n"
+            f"    c.config.set_value('/filters/fir_L/parameters/filename', {fir['L']!r})\n"
+            f"    c.config.set_value('/filters/fir_R/parameters/filename', {fir['R']!r})\n"
+            "else:\n"
+            f"    c.config.set_value('/filters/kick_body_L/parameters/gain', {gain_l})\n"
+            f"    c.config.set_value('/filters/kick_body_R/parameters/gain', {gain_r})\n")
+    _cdsp(code)
 
 
 NOTCH_FLAG = "/home/rulio12/notch/enabled"
@@ -506,7 +525,7 @@ async function refresh(){
     document.getElementById('tubeToggle').textContent='Lampes '+(tubeOn?'On':'Off');
     document.getElementById('loudToggle').classList.toggle('sel', !!s.loud);
     document.getElementById('loudToggle').textContent='Loudness '+(s.loud?'On':'Off');
-    document.getElementById('kbToggle').classList.toggle('sel', s.kick==='double');
+    document.getElementById('kbToggle').classList.toggle('sel', s.kick==='double'||(s.kick_fir&&s.kick==='avec'));
     document.getElementById('kbToggle').textContent='Kick '+(s.kick||'?');
     document.getElementById('notchToggle').classList.toggle('sel', !!s.notch);
     document.getElementById('notchToggle').textContent='Notch 42/64Hz '+(s.notch?'On':'Off');
@@ -537,8 +556,8 @@ function toggleLoud(){
 }
 function toggleKickbody(){
   if(!lastStatus)return;
-  const o=['sans','avec','double'], i=o.indexOf(lastStatus.kick);
-  fetch('/kick?niveau='+o[(i+1)%3]).then(()=>setTimeout(refresh,800));
+  const o=lastStatus.kick_fir?['sans','avec']:['sans','avec','double'], i=o.indexOf(lastStatus.kick);
+  fetch('/kick?niveau='+o[(i+1)%o.length]).then(()=>setTimeout(refresh,800));
 }
 function toggleNotch(){
   if(!lastStatus)return;
