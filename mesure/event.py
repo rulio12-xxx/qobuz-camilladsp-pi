@@ -4,6 +4,7 @@
     python3 event.py gen                                  # cree ~/musique/event_G.wav et event_D.wav (une fois)
     python3 event.py mesure <session> <nom>               # joue + enregistre + deconvolue + sauvegarde
     python3 event.py analyse <session> [options cotes] [--spl V:SPL]  # analyse + notes /10
+    python3 event.py rose G                               # bruit rose pour calibrer le sonometre (--spl)
     python3 event.py liste <session>                      # mesures deja faites
     python3 event.py niveaux <session> "event G" -40 -34 -28 -22 -16   # paliers croissants
     python3 event.py selftest                             # test complet sur une enceinte simulee
@@ -87,7 +88,55 @@ def gen():
             st[a:a + len(s), ch] = s
             write_wav(wav_path(cote, fort), st, FS, channels=2, sampwidth=3)
             print(f"OK : {wav_path(cote, fort)}, {n / FS:.1f} s")
+    rose = bruit_rose()
+    for cote, ch in (("G", 0), ("D", 1)):
+        st = np.zeros((len(rose), 2))
+        st[:, ch] = rose
+        write_wav(rose_path(cote), st, FS, channels=2, sampwidth=3)
+        print(f"OK : {rose_path(cote)}, {len(rose) / FS:.0f} s, bruit rose {ROSE_RMS_DBFS:g} dBFS RMS")
     subprocess.run(["mpc", "-q", "update", "--wait"])
+
+
+# ---------------------------------------------------------------- calibration
+ROSE_RMS_DBFS = -20.0            # norme cinema / home : bruit rose a -20 dBFS RMS
+ROSE_DUREE_S = 60.0
+VOLUME_MAX_ROSE = -20.0
+
+
+def rose_path(cote):
+    return os.path.join(MUSIQUE, f"bruit_rose_{cote}.wav")
+
+
+def bruit_rose(seed=7):
+    """Bruit rose 20 Hz-20 kHz (-3 dB/octave), RMS -20 dBFS, boucle sans raccord."""
+    n = int(ROSE_DUREE_S * FS)
+    rng = np.random.default_rng(seed)
+    f = np.fft.rfftfreq(n, 1 / FS)
+    amp = np.zeros_like(f)
+    sel = (f >= 20) & (f <= 20000)
+    amp[sel] = 1 / np.sqrt(f[sel])
+    x = np.fft.irfft(amp * np.exp(2j * np.pi * rng.random(len(f))), n)
+    x *= 10 ** (ROSE_RMS_DBFS / 20) / np.sqrt(np.mean(x ** 2))
+    return np.clip(x, -0.99, 0.99)
+
+
+def rose(cote, volume_max):
+    """Joue le bruit rose en boucle sur une enceinte, pour lire le sonometre."""
+    if not os.path.exists(rose_path(cote)):
+        sys.exit(f"{rose_path(cote)} absent : lancer d'abord  python3 event.py gen")
+    v = snapshot()["volume"]
+    if v > volume_max:
+        sys.exit(f"Volume {v} dB > {volume_max} dB : baisser le volume (ou --volume-max).")
+    mpc("clear"); mpc("add", os.path.basename(rose_path(cote))); mpc("repeat", "on"); mpc("play")
+    print(f"Bruit rose sur {cote} a {v} dB CamillaDSP ({ROSE_RMS_DBFS:g} dBFS RMS).")
+    print("Lire le sonometre a la place d'ecoute (ponderation C, lent), puis noter :")
+    print(f"    --spl {v:g}:<niveau lu>")
+    try:
+        input("Entree pour arreter... ")
+    except (KeyboardInterrupt, EOFError):
+        pass
+    finally:
+        mpc("stop"); mpc("repeat", "off")
 
 
 def mpc(*a):
@@ -486,6 +535,12 @@ if __name__ == "__main__":
         mesure(args[0], " ".join(args[1:]), vmax)
     elif cmd == "analyse":
         analyse(sys.argv[2], sys.argv[3:])
+    elif cmd == "rose":
+        args = sys.argv[2:]
+        vmax = VOLUME_MAX_ROSE
+        if "--volume-max" in args:
+            i = args.index("--volume-max"); vmax = float(args[i + 1]); del args[i:i + 2]
+        rose((args[0] if args else "G").upper(), vmax)
     elif cmd == "liste":
         liste(sys.argv[2])
     elif cmd == "niveaux":

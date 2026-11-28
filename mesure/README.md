@@ -111,7 +111,10 @@ cible, niveau max propre (compression < 1 dB et H3 < 3 %). Note globale ponderee
     python3 event.py analyse 2026-11-28 --d-membrane 330 --d-event 100 --spl -30:85
 
 - `--spl V:SPL` : a V dB CamillaDSP, le sonometre lit SPL dB a la place d'ecoute
-  (bruit rose, ponderation C ; une appli de telephone suffit pour commencer).
+  avec le bruit rose de `python3 event.py rose G` (-20 dBFS RMS, 20 Hz-20 kHz, en
+  boucle, Entree pour arreter ; ponderation C, une appli de telephone suffit pour
+  commencer). Comme la norme cinema : 85 dB de bruit rose = 105 dB de crete.
+  La crete du sweep des paliers est 16,9 dB au-dessus du bruit rose.
   Sans lui, compression et distorsion sont jugees au palier le plus fort, et c'est ecrit.
 - Sorties : `analyse/notes.md` et `analyse/notes.json`.
 

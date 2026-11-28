@@ -9,7 +9,8 @@ Compression et distorsion sont jugees au niveau cible de la reference
 (105 dB SPL de crete a la place d'ecoute en audiophile, 115 dB en pro). Pour
 convertir un volume CamillaDSP en dB SPL il faut un point de calibration :
 --spl VOLUME:SPL, par exemple --spl -30:85 si un sonometre (ou une appli de
-telephone, ponderation C, bruit rose) lit 85 dB a la place d'ecoute a -30 dB.
+telephone, ponderation C) lit 85 dB a la place d'ecoute a -30 dB, avec le
+bruit rose de  event.py rose G  (-20 dBFS RMS, comme la norme cinema).
 Sans calibration, elles sont jugees au palier le plus fort et c'est signale.
 
 Appele par  event.py analyse <session> [--spl V:SPL]
@@ -19,6 +20,10 @@ import math
 import os
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+# --spl est lu avec le bruit rose de event.py (-20 dBFS RMS). Le sweep des paliers
+# a une crete de 0,7 (-3,1 dBFS) : sa crete est 16,9 dB au-dessus du bruit rose.
+# Comme la norme : 85 dB de bruit rose a -20 dBFS = 105 dB de crete a 0 dBFS.
+CRETE_SWEEP_DB = 20 * math.log10(0.7) + 20.0
 
 NOMS = {
     "accord_GD_hz": "Accord identique G/D (ecart Hz)",
@@ -65,6 +70,7 @@ def niveau(paliers, spl, cible, propre):
         rem = f"niveau non calibre : juge au palier le plus fort ({haut['volume_db']:g} dB CamillaDSP)"
     else:
         v0, s0 = spl
+        s0 = s0 + CRETE_SWEEP_DB          # niveau de crete du sweep a v0
         v_cible = v0 + (cible - s0)
         if v_cible <= haut["volume_db"]:
             if v_cible < min(p["volume_db"] for p in paliers):
