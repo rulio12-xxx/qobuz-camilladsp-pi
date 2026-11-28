@@ -62,6 +62,32 @@ reglages live ; reporter les valeurs retenues dans les YAML de `camilladsp/`.
 - `iterate_delay.py`, `delay_centered.py`, `reanalyze_delay.py` : delai L/R.
 - `selftest*.py` : auto-tests synthetiques des methodes.
 
+## Event bass-reflex en champ proche (27/11/2026)
+
+Mesure de l'event et du woofer micro colle (1 cm), sans REW. Protocole complet :
+document "Protocole de mesure de l'event bass-reflex" (claude.ai).
+
+    python3 event.py gen                               # une fois : ~/musique/event_G.wav, event_D.wav
+    ./reveil.sh
+    python3 event.py mesure 2026-11-28 "bruit G"       # bruit de fond (aucun son joue)
+    python3 event.py mesure 2026-11-28 "woofer G"      # micro a 1 cm du cache-noyau
+    python3 event.py mesure 2026-11-28 "woofer G2"     # repetition, micro recule de quelques mm
+    python3 event.py mesure 2026-11-28 "event G"       # micro dans le plan de sortie de l'event
+    python3 event.py mesure 2026-11-28 "event G2"      # repetition, micro decale de 1 cm
+    ... idem avec D ...
+    python3 event.py analyse 2026-11-28 --d-membrane 330 --d-event 100 --l-event 250 --vb 180
+    python3 event.py selftest                          # chaine complete sur une enceinte simulee
+
+- Sweep log 10 Hz-20 kHz de 16 s sur un seul canal, joue par MPD (comme ir2.py).
+  Refuse de mesurer si le volume CamillaDSP depasse -40 dB (`--volume-max` pour changer).
+- Ne pas toucher au gain du Scarlett ni au volume entre woofer et event d'un meme cote.
+- Pas de reference de temps entre deux mesures (latence MPD variable) : la somme
+  woofer + event utilise la phase minimale reconstruite (valable dans le grave en
+  champ proche). L'event est mis a l'echelle par le rapport des diametres (Keele).
+- Sorties dans `resultats/event/<session>/` : une reponse par mesure (.npz + .json),
+  et `analyse/` (resume.md, resultats.json, courbes PNG si matplotlib est installe).
+- `event_analyse.py` lit aussi les fichiers REW (.mdat ou export texte).
+
 ## Resultats
 
 `resultats/` : resultats dates. `history/` : courbes avant/apres de septembre.
