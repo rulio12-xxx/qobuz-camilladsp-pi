@@ -228,6 +228,11 @@ def analyser_cote(mes, cote, a, out):
     else:
         k = None
         R['avertissements'].append('Diametres non fournis : somme non calculee (donner --d-membrane et --d-event)')
+    if k:
+        yWl = lisser(db(W), 48)
+        for p_ in R['resonances_tuyau']:
+            j = int(np.argmin(abs(FGRID - p_['f_hz'])))
+            p_['vs_woofer_db'] = round(float(brut[j] + 20 * math.log10(k) - yWl[j]), 1)
     S = None
     if k:
         utilise_minph = a.phase_minimale or not (phw and all(o for _, _, o in E_list))
@@ -341,6 +346,10 @@ def main(argv=None, mes=None):
     if len(res['cotes']) == 2:
         g, d = res['cotes']['G'], res['cotes']['D']
         res['ecart_fb_GD_hz'] = round(g['fb_creux_woofer_hz'] - d['fb_creux_woofer_hz'], 1)
+        cg, cd_ = g['_courbe'], d['_courbe']
+        zn, zc = (FGRID > 100) & (FGRID < 200), (FGRID > 30) & (FGRID < 150)
+        dif = (cg - np.mean(cg[zn])) - (cd_ - np.mean(cd_[zn]))
+        res['ecart_forme_GD_30_150_db'] = round(float(np.max(np.abs(dif[zc]))), 2)
     plt = _plt()
     if len(res['cotes']) == 2 and plt is not None:
         fig, ax = plt.subplots(figsize=(11, 5))

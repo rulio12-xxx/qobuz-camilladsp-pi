@@ -101,6 +101,20 @@ Fort niveau (en journee) : paliers croissants sur l'event ou le woofer, micro en
   le garder pour tous les paliers).
 - Resultat : `resultats/event/<session>/<nom>_niveaux.json` + une reponse par palier.
 
+Notes /10 (`event_notes.py`, seuils dans `event_notes.json`, modifiables) : chaque
+caracteristique est notee contre deux references, audiophile (cible 105 dB SPL de
+crete a la place d'ecoute) et pro (115 dB SPL). Criteres : accord identique G/D,
+extension grave (-3 dB), bosse de la somme, retard de groupe (en cycles), resonance
+de tuyau par rapport au woofer, forme du grave G/D, compression, H3 et H2 au niveau
+cible, niveau max propre (compression < 1 dB et H3 < 3 %). Note globale ponderee.
+
+    python3 event.py analyse 2026-11-28 --d-membrane 330 --d-event 100 --spl -30:85
+
+- `--spl V:SPL` : a V dB CamillaDSP, le sonometre lit SPL dB a la place d'ecoute
+  (bruit rose, ponderation C ; une appli de telephone suffit pour commencer).
+  Sans lui, compression et distorsion sont jugees au palier le plus fort, et c'est ecrit.
+- Sorties : `analyse/notes.md` et `analyse/notes.json`.
+
 ## Resultats
 
 `resultats/` : resultats dates. `history/` : courbes avant/apres de septembre.

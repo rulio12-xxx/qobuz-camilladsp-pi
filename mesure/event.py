@@ -3,7 +3,7 @@
 
     python3 event.py gen                                  # cree ~/musique/event_G.wav et event_D.wav (une fois)
     python3 event.py mesure <session> <nom>               # joue + enregistre + deconvolue + sauvegarde
-    python3 event.py analyse <session> [options cotes]    # analyse numerique de la session
+    python3 event.py analyse <session> [options cotes] [--spl V:SPL]  # analyse + notes /10
     python3 event.py liste <session>                      # mesures deja faites
     python3 event.py niveaux <session> "event G" -40 -34 -28 -22 -16   # paliers croissants
     python3 event.py selftest                             # test complet sur une enceinte simulee
@@ -206,11 +206,33 @@ def charger_session(session):
 
 def analyse(session, extra):
     import event_analyse
+    import event_notes
+    extra = list(extra)
+    spl = None
+    if "--spl" in extra:
+        i = extra.index("--spl")
+        v, s = extra[i + 1].split(":")
+        spl = (float(v), float(s))
+        del extra[i:i + 2]
     mes = charger_session(session)
     if not mes:
         sys.exit(f"Aucune mesure dans {os.path.join(OUT, session)}")
     out = os.path.join(OUT, session, "analyse")
-    return event_analyse.main(["--out", out] + extra, mes=mes)
+    res = event_analyse.main(["--out", out] + extra, mes=mes)
+    # paliers de niveau : on prend ceux de l'event, sinon ceux du woofer
+    paliers = {}
+    for p in sorted(glob.glob(os.path.join(OUT, session, "*niveaux.json")), key=lambda x: "event" not in x):
+        d = json.load(open(p))
+        m = NOM_RE.match(d["nom"])
+        if m:
+            paliers.setdefault(m.group(2).upper(), d["paliers"])
+    notes = event_notes.noter(res, paliers, spl)
+    res["notes"] = notes
+    txt = event_notes.tableau(notes)
+    open(os.path.join(out, "notes.md"), "w").write(txt + "\n")
+    json.dump(notes, open(os.path.join(out, "notes.json"), "w"), indent=1, ensure_ascii=False)
+    print(txt)
+    return res
 
 
 def liste(session):
@@ -410,6 +432,12 @@ def selftest():
               f"tuyau {tuyau} {'OK' if e2 else 'ECHEC'}, "
               f"-3 dB somme {res.get('somme_f3_hz')} Hz (B4 : = Fb) {'OK' if e3 else 'ECHEC'}")
         ok &= e1 and e2 and e3
+    res = analyse(session, ["--d-membrane", "330", "--d-event", "100", "--spl", "-30:85"])
+    n = res["notes"]["audiophile"]["cotes"]["G"]
+    e4 = n["note_globale"] is not None and n["criteres"]["h3_pct"]["note"] is not None
+    print(f"selftest notes : globale audiophile G {n['note_globale']}/10, "
+          f"pro G {res['notes']['pro']['cotes']['G']['note_globale']}/10 {'OK' if e4 else 'ECHEC'}")
+    ok &= e4
     print("SELFTEST", "OK" if ok else "ECHEC")
     return ok
 
@@ -471,8 +499,8 @@ if __name__ == "__main__":
             sys.exit('Usage : python3 event.py niveaux <session> "event G" -40 -34 -28 -22 -16')
         niveaux(args[0], args[1], [float(x) for x in args[2:]], vmax, oui)
     elif cmd == "selftest":
-        ok1 = selftest()
         ok2 = selftest_niveaux()
+        ok1 = selftest()
         sys.exit(0 if ok1 and ok2 else 1)
     else:
         sys.exit(__doc__)
