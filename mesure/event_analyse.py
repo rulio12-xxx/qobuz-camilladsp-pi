@@ -383,6 +383,11 @@ def main(argv=None, mes=None):
     print('Mesures trouvees :', ', '.join(sorted(mes)))
     th = theorie(a)
     res = dict(theorie=th, cotes={})
+    if a.d_event:
+        d_eq = a.d_event / 1000 if not a.d_event2 else 2 * math.sqrt(a.d_event * a.d_event2 * 1e-6 / math.pi)
+        r_b = (a.rayon_bords or 0) / 1000 if a.bords_arrondis >= 1 else 0.0
+        # le micro est a la sortie exterieure ; l'arrondi est suppose de ce cote s'il y en a un
+        res['geometrie'] = {'rayon_gorge_m': d_eq / 2, 'rayon_sortie_m': d_eq / 2 + r_b, 'n_event': a.n_event}
     for cote in 'GD':
         r = analyser_cote(mes, cote, a, a.out)
         if r: res['cotes'][cote] = r

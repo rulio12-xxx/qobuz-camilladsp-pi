@@ -4,7 +4,9 @@
     python3 event.py gen                                  # cree ~/musique/event_G.wav et event_D.wav (une fois)
     python3 event.py mesure <session> <nom>               # joue + enregistre + deconvolue + sauvegarde
     python3 event.py analyse <session> [options cotes] [--spl V:SPL]  # analyse + notes /10
+    python3 event.py calib <session> --niveau 94          # calibreur micro (94 ou 114 dB, 1 kHz)
     python3 event.py rose G                               # bruit rose pour calibrer le sonometre (--spl)
+    python3 event.py rose G --mesure <session>            # idem, niveau mesure par le micro calibre
     python3 event.py liste <session>                      # mesures deja faites
     python3 event.py niveaux <session> "event G" -40 -34 -28 -22 -16   # paliers croissants
     python3 event.py selftest                             # test complet sur une enceinte simulee
@@ -38,6 +40,7 @@ reference de REW. Valide par le selftest.
 import datetime
 import glob
 import json
+import math
 import os
 import re
 import subprocess
@@ -120,23 +123,146 @@ def bruit_rose(seed=7):
     return np.clip(x, -0.99, 0.99)
 
 
-def rose(cote, volume_max):
-    """Joue le bruit rose en boucle sur une enceinte, pour lire le sonometre."""
+def rose(cote, volume_max, session=None):
+    """Joue le bruit rose en boucle sur une enceinte, pour lire le sonometre.
+    Avec une session calibree (event.py calib), le micro mesure lui-meme le niveau
+    a la place d'ecoute et l'enregistre pour l'analyse (remplace --spl)."""
+    if session:
+        return rose_mesure(cote, volume_max, session)
     if not os.path.exists(rose_path(cote)):
         sys.exit(f"{rose_path(cote)} absent : lancer d'abord  python3 event.py gen")
     v = snapshot()["volume"]
     if v > volume_max:
         sys.exit(f"Volume {v} dB > {volume_max} dB : baisser le volume (ou --volume-max).")
     mpc("clear"); mpc("add", os.path.basename(rose_path(cote))); mpc("repeat", "on"); mpc("play")
-    print(f"Bruit rose sur {cote} a {v} dB CamillaDSP ({ROSE_RMS_DBFS:g} dBFS RMS).")
+    gc = analyse_config(snapshot().get("config"), 0 if cote == "G" else 1, v)
+    print(f"Bruit rose sur {cote} a {v} dB CamillaDSP ({ROSE_RMS_DBFS:g} dBFS RMS), "
+          f"gain fixe de la config {gc['gain_config_db']:+.1f} dB.")
+    for a_ in gc["alertes"]:
+        print("ATTENTION : " + a_)
     print("Lire le sonometre a la place d'ecoute (ponderation C, lent), puis noter :")
-    print(f"    --spl {v:g}:<niveau lu>")
+    print(f"    --spl {v:g}:<niveau lu>:{gc['gain_config_db']:g}")
     try:
         input("Entree pour arreter... ")
     except (KeyboardInterrupt, EOFError):
         pass
     finally:
         mpc("stop"); mpc("repeat", "off")
+
+
+# ---------------------------------------------------------------- calibreur micro
+P_REF = 20e-6
+CAL_FREQ = 1000.0
+CAL_DUREE_S = 6.0
+
+
+def calibration_path(session):
+    return os.path.join(OUT, session, "calibration.json")
+
+
+def lire_calibration(session):
+    p = calibration_path(session)
+    if not os.path.exists(p):
+        return None
+    return json.load(open(p))["actuelle"]
+
+
+def calib_depuis_enregistrement(rec, niveau_db):
+    """Pa par unite numerique, d'apres le son du calibreur (1 kHz, 94 ou 114 dB SPL)."""
+    x = rec[int(1.0 * FS):]
+    nf = len(x)
+    X = np.fft.rfft(x * np.hanning(nf))
+    f = np.fft.rfftfreq(nf, 1 / FS)
+    f_pic = float(f[np.argmax(np.abs(X))])
+    if abs(f_pic - CAL_FREQ) > 50:
+        raise ValueError(f"son du calibreur a {f_pic:.0f} Hz au lieu de 1 kHz : micro bien enfonce ?")
+    # RMS de la composante 1 kHz (filtre 900-1100 Hz par FFT)
+    Y = np.fft.rfft(x)
+    Y[(f < 900) | (f > 1100)] = 0
+    y = np.fft.irfft(Y, nf)
+    blocs = [np.sqrt(np.mean(b ** 2)) for b in np.array_split(y, 10)]
+    ecart = 20 * np.log10(max(blocs) / min(blocs))
+    if ecart > 0.5:
+        raise ValueError(f"niveau instable ({ecart:.1f} dB) : calibreur mal tenu ?")
+    r = float(np.sqrt(np.mean(y ** 2)))
+    if 20 * np.log10(np.max(np.abs(x)) + 1e-12) > -1:
+        raise ValueError("micro sature par le calibreur : baisser le gain du Scarlett")
+    p_rms = P_REF * 10 ** (niveau_db / 20)
+    return {"niveau_calibreur_db": niveau_db, "pa_par_unite": p_rms / r,
+            "niveau_lu_dbfs": round(20 * np.log10(r), 2),
+            "spl_a_0dbfs_rms": round(niveau_db - 20 * np.log10(r), 2), "frequence_hz": round(f_pic, 1)}
+
+
+def calib(session, niveau_db, rec=None):
+    """Enregistre le calibreur pose sur le micro et memorise la calibration de la session.
+    A refaire a chaque changement de gain du Scarlett."""
+    if rec is None:
+        path = f"/tmp/event_calib_{session}.wav"
+        input(f"Calibreur sur le micro, reglé sur {niveau_db:g} dB, allume. Entree pour enregistrer {CAL_DUREE_S:g} s... ")
+        subprocess.run(["arecord", "-D", DEVICE, "-f", "S32_LE", "-r", str(FS), "-c", "2",
+                        "-d", str(int(CAL_DUREE_S)), path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        rec, _ = read_wav_mono(path, channel=MIC_CHANNEL)
+    try:
+        c = calib_depuis_enregistrement(rec, niveau_db)
+    except ValueError as e:
+        sys.exit(f"Calibration refusee : {e}")
+    c["date"] = datetime.datetime.now().isoformat(timespec="seconds")
+    os.makedirs(os.path.join(OUT, session), exist_ok=True)
+    p = calibration_path(session)
+    hist = json.load(open(p))["historique"] if os.path.exists(p) else []
+    hist.append(c)
+    json.dump({"actuelle": c, "historique": hist}, open(p, "w"), indent=1)
+    print(f"Calibration {niveau_db:g} dB : lu {c['niveau_lu_dbfs']} dBFS, soit 0 dBFS RMS = {c['spl_a_0dbfs_rms']} dB SPL."
+          " Valable tant que le gain du Scarlett ne bouge pas.")
+    return c
+
+
+def ponderation_c(f):
+    f = np.maximum(f, 1e-3)
+    rc = (12194 ** 2 * f ** 2) / ((f ** 2 + 20.6 ** 2) * (f ** 2 + 12194 ** 2))
+    return rc / ((12194 ** 2 * 1000 ** 2) / ((1000 ** 2 + 20.6 ** 2) * (1000 ** 2 + 12194 ** 2)))
+
+
+def spl_enregistrement(x, pa):
+    """(dB SPL lineaire 20 Hz-20 kHz, dB SPL pondere C) d'un enregistrement calibre."""
+    X = np.fft.rfft(x)
+    f = np.fft.rfftfreq(len(x), 1 / FS)
+    sel = (f >= 20) & (f <= 20000)
+    p2 = np.abs(X) ** 2
+    lin = np.sqrt(2 * np.sum(p2[sel])) / len(x) * pa
+    c = np.sqrt(2 * np.sum(p2[sel] * ponderation_c(f[sel]) ** 2)) / len(x) * pa
+    return 20 * np.log10(lin / P_REF), 20 * np.log10(c / P_REF)
+
+
+def rose_mesure(cote, volume_max, session):
+    c = lire_calibration(session)
+    if c is None:
+        sys.exit("Pas de calibration dans cette session : lancer d'abord  python3 event.py calib <session> --niveau 94")
+    if not os.path.exists(rose_path(cote)):
+        sys.exit(f"{rose_path(cote)} absent : lancer d'abord  python3 event.py gen")
+    snap = snapshot()
+    v = snap["volume"]
+    if v > volume_max:
+        sys.exit(f"Volume {v} dB > {volume_max} dB : baisser le volume (ou --volume-max).")
+    controle_config({**snap, "volume": v}, cote, strict=True, accepter=False)
+    input("Micro a la place d'ecoute, a hauteur d'oreille, pointe vers l'enceinte. Entree pour lancer... ")
+    path = f"/tmp/event_rose_{session}.wav"
+    mpc("clear"); mpc("add", os.path.basename(rose_path(cote))); mpc("repeat", "on"); mpc("play")
+    try:
+        time.sleep(3)
+        subprocess.run(["arecord", "-D", DEVICE, "-f", "S32_LE", "-r", str(FS), "-c", "2", "-d", "10", path],
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    finally:
+        mpc("stop"); mpc("repeat", "off")
+    x, _ = read_wav_mono(path, channel=MIC_CHANNEL)
+    lin, cpond = spl_enregistrement(x, c["pa_par_unite"])
+    gc = analyse_config(snapshot().get("config"), 0 if cote == "G" else 1, v)
+    d = {"volume_db": v, "spl_c_db": round(cpond, 1), "spl_lin_db": round(lin, 1), "cote": cote,
+         "gain_config_db": gc["gain_config_db"], "volume_effectif_db": v + gc["gain_config_db"],
+         "calibration": c, "date": datetime.datetime.now().isoformat(timespec="seconds")}
+    json.dump(d, open(os.path.join(OUT, session, "spl.json"), "w"), indent=1)
+    print(f"Place d'ecoute : {cpond:.1f} dB SPL (C), {lin:.1f} dB SPL (lineaire) a {v:g} dB CamillaDSP.")
+    print(f"Enregistre : l'analyse l'utilisera sans --spl (equivalent a --spl {v:g}:{cpond:.1f}).")
 
 
 def mpc(*a):
@@ -148,6 +274,87 @@ def snapshot():
             "c.connect()\nprint(json.dumps({'volume': c.volume.main_volume(), 'config': c.config.active()}))")
     out = subprocess.run([VENV_PY, "-c", code], capture_output=True, text=True).stdout
     return json.loads(out)
+
+
+def analyse_config(cfg, ch, volume=0.0):
+    """Gain numerique fixe de la config CamillaDSP pour le canal ch (preampli et autres
+    filtres Gain, gains des mixers), et ce qui fausserait une mesure : compresseur
+    (processeur 'tube'), loudness actif, limiteur trop proche du niveau du sweep."""
+    out = {"gain_config_db": 0.0, "details": [], "alertes": [], "bloquant": False}
+    if not cfg:
+        out["alertes"].append("config CamillaDSP illisible : gain du preampli inconnu")
+        return out
+    filtres = cfg.get("filters") or {}
+    mixers = cfg.get("mixers") or {}
+    procs = cfg.get("processors") or {}
+    for st in cfg.get("pipeline") or []:
+        if st.get("bypassed"):
+            continue
+        typ = st.get("type")
+        if typ == "Filter":
+            chans = st.get("channels", [st.get("channel")])
+            if ch not in chans:
+                continue
+            for n in st.get("names", []):
+                fl = filtres.get(n) or {}
+                pa = fl.get("parameters") or {}
+                if fl.get("type") == "Gain":
+                    g = pa.get("gain", 0.0)
+                    if pa.get("scale") == "linear":
+                        g = 20 * math.log10(max(abs(g), 1e-9))
+                    if pa.get("mute"):
+                        out["alertes"].append(f"filtre {n} en muet"); out["bloquant"] = True
+                    out["gain_config_db"] += g
+                    out["details"].append(f"{n} {g:+.1f} dB")
+                elif fl.get("type") == "Limiter":
+                    out["limiteur_dbfs"] = pa.get("clip_limit", 0.0)
+                elif fl.get("type") == "Loudness" or (n.startswith("loud") and abs(pa.get("gain", 0.0)) > 0.05):
+                    out["alertes"].append(f"loudness actif ({n}) : il change avec le volume")
+                    out["bloquant"] = True
+                elif fl.get("type") == "Conv":
+                    out["details"].append(f"{n} (FIR)")
+        elif typ == "Mixer":
+            mx = mixers.get(st.get("name"), {})
+            for m in mx.get("mapping", []):
+                if m.get("dest") == ch:
+                    for s in m.get("sources", []):
+                        if s.get("channel") == ch and not s.get("mute"):
+                            g = s.get("gain", 0.0)
+                            if s.get("scale") == "linear":
+                                g = 20 * math.log10(max(abs(g), 1e-9))
+                            out["gain_config_db"] += g
+                            out["details"].append(f"mixer {st.get('name')} {g:+.1f} dB")
+        elif typ == "Processor":
+            pr = procs.get(st.get("name"), {})
+            out["alertes"].append(f"processeur {st.get('name')} ({pr.get('type')}) actif : "
+                                  "il change le niveau et ajoute de la distorsion")
+            out["bloquant"] = True
+    crete = 20 * math.log10(0.7) + out["gain_config_db"] + volume
+    out["crete_numerique_dbfs"] = round(crete, 1)
+    lim = out.get("limiteur_dbfs")
+    if lim is not None and crete > lim - 3:
+        out["alertes"].append(f"le sweep atteint {crete:.1f} dBFS, pres du limiteur ({lim} dBFS)")
+        out["bloquant"] = True
+    if crete > -1:
+        out["alertes"].append(f"le sweep atteint {crete:.1f} dBFS dans CamillaDSP : risque d'ecretage")
+        out["bloquant"] = True
+    out["gain_config_db"] = round(out["gain_config_db"], 2)
+    return out
+
+
+def controle_config(snap, cote, strict, accepter):
+    """Affiche le gain de la config, refuse (strict) si elle fausserait la mesure."""
+    ch = 0 if cote == "G" else 1
+    c = analyse_config(snap.get("config"), ch, snap.get("volume", 0.0))
+    print(f"Config CamillaDSP canal {cote} : gain fixe {c['gain_config_db']:+.1f} dB "
+          f"({', '.join(c['details']) or 'aucun'}), volume {snap.get('volume')} dB, "
+          f"crete du sweep {c['crete_numerique_dbfs']} dBFS")
+    for a in c["alertes"]:
+        print("ATTENTION : " + a)
+    if c["bloquant"] and strict and not accepter:
+        sys.exit("Mesure refusee : charger une config de mesure a plat (sans compresseur, loudness ni preampli "
+                 "change en cours de route), ou --accepter-config si c'est voulu.")
+    return c
 
 
 def record(path, cote, jouer=True, fort=False):
@@ -216,6 +423,7 @@ def mesure(session, nom, volume_max):
     if snap["volume"] > volume_max:
         sys.exit(f"Volume CamillaDSP {snap['volume']} dB > {volume_max} dB : baisser le volume "
                  f"(ou --volume-max si c'est voulu).")
+    cfgc = controle_config(snap, cote, strict=False, accepter=True)
     path = f"/tmp/event_{session}_{nom.replace(' ', '_')}.wav"
     record(path, cote, jouer=(type_ != "bruit"))
     rec, fs = read_wav_mono(path, channel=MIC_CHANNEL)
@@ -228,7 +436,10 @@ def mesure(session, nom, volume_max):
     meta = {"nom": nom, "session": session, "date": datetime.datetime.now().isoformat(timespec="seconds"),
             "pic_micro_dbfs": round(float(pic), 1), "volume_db": snap["volume"],
             "bruit_rel_db": None if bruit_rel is None else round(20 * np.log10(bruit_rel), 1),
-            "sweep": f"{F1:g}-{F2:g} Hz, {SWEEP_DUR:g} s, {FS} Hz"}
+            "sweep": f"{F1:g}-{F2:g} Hz, {SWEEP_DUR:g} s, {FS} Hz",
+            "calibration": lire_calibration(session),
+            "gain_config_db": cfgc["gain_config_db"], "volume_effectif_db": snap["volume"] + cfgc["gain_config_db"],
+            "alertes_config": cfgc["alertes"]}
     json.dump({**meta, "config": snap["config"]}, open(fichier(session, nom) + ".json", "w"))
     print(f"{nom} : pic micro {pic:+.1f} dBFS, volume {snap['volume']} dB"
           + ("" if bruit_rel is None else f", bruit {meta['bruit_rel_db']} dB sous le pic"))
@@ -260,9 +471,19 @@ def analyse(session, extra):
     spl = None
     if "--spl" in extra:
         i = extra.index("--spl")
-        v, s = extra[i + 1].split(":")
-        spl = (float(v), float(s))
+        parts = extra[i + 1].split(":")
+        g = float(parts[2]) if len(parts) > 2 else None
+        spl = (float(parts[0]) + (g or 0.0), float(parts[1]))
+        if g is None:
+            # sans le gain de la config, on compare des volumes bruts : meme preampli suppose
+            print("ATTENTION : --spl sans gain de config (V:SPL:GAIN) : suppose le meme preampli que les paliers")
+            spl = (float(parts[0]), float(parts[1]), "brut")
         del extra[i:i + 2]
+    sp = os.path.join(OUT, session, "spl.json")
+    if spl is None and os.path.exists(sp):
+        d = json.load(open(sp))
+        spl = (float(d["volume_effectif_db"]), float(d["spl_c_db"]))
+        print(f"Niveau place d'ecoute mesure au micro calibre : {spl[1]} dB SPL a {spl[0]:g} dB")
     mes = charger_session(session)
     if not mes:
         sys.exit(f"Aucune mesure dans {os.path.join(OUT, session)}")
@@ -274,7 +495,15 @@ def analyse(session, extra):
         d = json.load(open(p))
         m = NOM_RE.match(d["nom"])
         if m:
+            for pl in d["paliers"]:
+                if m.group(1).lower() == "event":
+                    pl["_centres"] = d["centres_hz"]
+                # niveaux compares en volume effectif (volume + preampli et gains de la config)
+                if not (isinstance(spl, tuple) and len(spl) == 3):
+                    pl["volume_db"] = pl.get("volume_effectif_db", pl["volume_db"])
             paliers.setdefault(m.group(2).upper(), d["paliers"])
+    if isinstance(spl, tuple) and len(spl) == 3:
+        spl = spl[:2]
     notes = event_notes.noter(res, paliers, spl)
     res["notes"] = notes
     txt = event_notes.tableau(notes)
@@ -371,7 +600,8 @@ def verdict(s, pic):
     return None
 
 
-def niveaux(session, nom, volumes, volume_max, oui=False, enregistreur=None):
+def niveaux(session, nom, volumes, volume_max, oui=False, enregistreur=None, calibration=None,
+            accepter_config=False):
     """Mesure a volumes croissants, s'arrete au premier signe de limite, remet le volume."""
     m = NOM_RE.match(nom.strip())
     if not m or m.group(1).lower() == "bruit":
@@ -384,13 +614,20 @@ def niveaux(session, nom, volumes, volume_max, oui=False, enregistreur=None):
     if not simu:
         if not os.path.exists(wav_path(cote, True)):
             sys.exit(f"{wav_path(cote, True)} absent : lancer d'abord  python3 event.py gen")
-        v0 = snapshot()["volume"]
+        snap0 = snapshot()
+        v0 = snap0["volume"]
+        cfg0 = controle_config({**snap0, "volume": volumes[-1]}, cote, strict=True, accepter=accepter_config)
         print(f"Paliers {volumes} dB sur {nom}, sweep {F1_FORT:g} Hz-20 kHz. Volume actuel {v0} dB, remis a la fin.")
         print(f"Arret automatique : compression > {ARRET_COMPRESSION_DB} dB, H3 > 10 %, micro > {ARRET_PIC_DBFS} dBFS.")
         print("Ctrl-C a tout moment : le volume est remis.")
         if not oui and input("Taper oui pour lancer : ").strip().lower() != "oui":
             sys.exit("Annule.")
     os.makedirs(os.path.join(OUT, session), exist_ok=True)
+    cal = calibration if simu else lire_calibration(session)
+    if cal is None:
+        print("Pas de calibration : niveaux relatifs seulement (python3 event.py calib <session> --niveau 114).")
+    if simu:
+        cfg0 = {"gain_config_db": 0.0}
     ref, resume = None, []
     try:
         for v in volumes:
@@ -399,6 +636,11 @@ def niveaux(session, nom, volumes, volume_max, oui=False, enregistreur=None):
             else:
                 set_volume(v)
                 time.sleep(0.5)
+                g = analyse_config(snapshot().get("config"), 0 if cote == "G" else 1, v)["gain_config_db"]
+                if abs(g - cfg0["gain_config_db"]) > 0.05:
+                    print(f"ARRET : le gain de la config a change pendant les paliers "
+                          f"({cfg0['gain_config_db']:+.1f} -> {g:+.1f} dB)")
+                    break
                 path = f"/tmp/event_niv_{v}.wav"
                 record(path, cote, fort=True)
                 rec, _ = read_wav_mono(path, channel=MIC_CHANNEL)
@@ -409,11 +651,21 @@ def niveaux(session, nom, volumes, volume_max, oui=False, enregistreur=None):
                 ref = r
             s = resume_palier(r)
             s["pic_micro_dbfs"] = round(pic, 1)
+            s["gain_config_db"] = cfg0["gain_config_db"]
+            s["volume_effectif_db"] = round(v + cfg0["gain_config_db"], 2)
+            if cal:
+                # crete du sweep (amplitude 0,7) au micro, en dB SPL, par bande de 1/6 d'octave
+                hb = bandes(f, H1, CENTRES_FORT)
+                s["spl_crete_db"] = [round(float(x), 1) for x in
+                                     hb + 20 * np.log10(0.7 * cal["pa_par_unite"] / P_REF)]
+                z = (CENTRES_FORT >= 20) & (CENTRES_FORT <= 150)
+                s["spl_crete_max_db"] = round(float(np.max(np.array(s["spl_crete_db"])[z])), 1)
             resume.append(s)
             np.savez_compressed(fichier(session, f"{nom} niv{v:g}") + ".npz", ir=lin, fs=FS)
             print(f"  {v:+6.1f} dB : pic {pic:+5.1f} dBFS, compression {s.get('compression_max_db', 0):+5.2f} dB"
                   f" ({s.get('compression_a_hz', '-')} Hz), H2 {s['h2_max_pct']:5.2f} % ({s['h2_a_hz']} Hz),"
-                  f" H3 {s['h3_max_pct']:5.2f} % ({s['h3_a_hz']} Hz)")
+                  f" H3 {s['h3_max_pct']:5.2f} % ({s['h3_a_hz']} Hz)"
+                  + (f", {s['spl_crete_max_db']:.0f} dB SPL au micro" if "spl_crete_max_db" in s else ""))
             raison = verdict(s, pic)
             if raison:
                 print(f"ARRET au palier {v} dB : {raison}")
@@ -425,7 +677,8 @@ def niveaux(session, nom, volumes, volume_max, oui=False, enregistreur=None):
         if not simu:
             set_volume(v0)
             print(f"Volume remis a {v0} dB")
-    detail = {"nom": nom, "centres_hz": [round(c, 1) for c in CENTRES_FORT], "paliers": resume}
+    detail = {"nom": nom, "centres_hz": [round(c, 1) for c in CENTRES_FORT], "paliers": resume,
+              "calibration": cal}
     json.dump(detail, open(fichier(session, f"{nom} niveaux") + ".json", "w"), indent=1, ensure_ascii=False)
     return resume
 
@@ -491,6 +744,46 @@ def selftest():
     return ok
 
 
+def selftest_calib():
+    """Son de calibreur simule : verifie Pa/unite et la mesure SPL du bruit rose."""
+    global OUT
+    OUT = os.path.join("/tmp", "event_selftest")
+    rng = np.random.default_rng(9)
+    t_ = np.arange(int(CAL_DUREE_S * FS)) / FS
+    pa_vrai = 60.0                      # 1 unite numerique = 60 Pa (114 dB = -0,6 dBFS crete... trop pres)
+    ok = True
+    for niv in (94.0, 114.0):
+        amp = P_REF * 10 ** (niv / 20) * np.sqrt(2) / pa_vrai
+        rec = amp * np.sin(2 * np.pi * 1000.3 * t_) + 1e-5 * rng.standard_normal(len(t_))
+        c = calib("simu", niv, rec=rec)
+        e = abs(20 * np.log10(c["pa_par_unite"] / pa_vrai))
+        print(f"selftest calib {niv:g} dB : erreur {e:.3f} dB {'OK' if e < 0.1 else 'ECHEC'}")
+        ok &= e < 0.1
+    x = bruit_rose()[:10 * FS]          # -20 dBFS RMS
+    lin, _ = spl_enregistrement(x, pa_vrai)
+    attendu = 20 * np.log10(0.1 * pa_vrai / P_REF)
+    e = abs(lin - attendu)
+    print(f"selftest SPL bruit rose : {lin:.1f} dB (attendu {attendu:.1f}) {'OK' if e < 0.2 else 'ECHEC'}")
+    return ok and e < 0.2
+
+
+def selftest_config():
+    cfg = {"filters": {"preamp": {"type": "Gain", "parameters": {"gain": -16.5}},
+                       "limiter": {"type": "Limiter", "parameters": {"clip_limit": -0.5}},
+                       "loud_bass": {"type": "Biquad", "parameters": {"type": "Peaking", "gain": 0.0}}},
+           "processors": {"tube": {"type": "Compressor", "parameters": {}}},
+           "pipeline": [{"type": "Filter", "channels": [0], "names": ["loud_bass", "preamp"]},
+                        {"type": "Processor", "name": "tube", "bypassed": True},
+                        {"type": "Filter", "channels": [0, 1], "names": ["limiter"]}]}
+    a = analyse_config(cfg, 0, -10)
+    cfg["pipeline"][1]["bypassed"] = False
+    b = analyse_config(cfg, 0, -10)
+    ok = a["gain_config_db"] == -16.5 and not a["bloquant"] and b["bloquant"]
+    print(f"selftest config : preampli {a['gain_config_db']} dB, compresseur detecte {b['bloquant']} "
+          f"{'OK' if ok else 'ECHEC'}")
+    return ok
+
+
 def selftest_niveaux():
     """Event simule qui compresse a fort niveau (saturation douce du debit) :
     les paliers doivent voir la compression et H3 monter, puis s'arreter."""
@@ -511,7 +804,8 @@ def selftest_niveaux():
         rec[lat:lat + len(y)] = y[:n - lat]
         return rec * 0.3 + 1e-5 * rng.standard_normal(n)
 
-    r = niveaux("simu", "event G", [-40, -34, -28, -22, -16, -10], -10, enregistreur=enregistreur)
+    r = niveaux("simu", "event G", [-40, -34, -28, -22, -16, -10], -10, enregistreur=enregistreur,
+                calibration={"pa_par_unite": 300.0})
     bas, haut = r[1], r[-1]
     ok = (abs(bas.get("compression_max_db", 0)) < 0.3 and bas["h3_max_pct"] < 1
           and "arret" in haut and haut["h3_max_pct"] > bas["h3_max_pct"] * 5)
@@ -540,7 +834,20 @@ if __name__ == "__main__":
         vmax = VOLUME_MAX_ROSE
         if "--volume-max" in args:
             i = args.index("--volume-max"); vmax = float(args[i + 1]); del args[i:i + 2]
-        rose((args[0] if args else "G").upper(), vmax)
+        sess = None
+        if "--mesure" in args:
+            i = args.index("--mesure"); sess = args[i + 1]; del args[i:i + 2]
+        rose((args[0] if args else "G").upper(), vmax, sess)
+    elif cmd == "calib":
+        args = sys.argv[2:]
+        niv = 94.0
+        if "--niveau" in args:
+            i = args.index("--niveau"); niv = float(args[i + 1]); del args[i:i + 2]
+        if niv not in (94.0, 114.0):
+            sys.exit("--niveau 94 ou 114")
+        if not args:
+            sys.exit("Usage : python3 event.py calib <session> --niveau 94")
+        calib(args[0], niv)
     elif cmd == "liste":
         liste(sys.argv[2])
     elif cmd == "niveaux":
@@ -549,13 +856,15 @@ if __name__ == "__main__":
         if "--volume-max" in args:
             i = args.index("--volume-max"); vmax = float(args[i + 1]); del args[i:i + 2]
         oui = "--oui" in args
-        args = [x for x in args if x != "--oui"]
+        acc = "--accepter-config" in args
+        args = [x for x in args if x not in ("--oui", "--accepter-config")]
         if len(args) < 3:
             sys.exit('Usage : python3 event.py niveaux <session> "event G" -40 -34 -28 -22 -16')
-        niveaux(args[0], args[1], [float(x) for x in args[2:]], vmax, oui)
+        niveaux(args[0], args[1], [float(x) for x in args[2:]], vmax, oui, accepter_config=acc)
     elif cmd == "selftest":
+        ok0 = selftest_calib() and selftest_config()
         ok2 = selftest_niveaux()
         ok1 = selftest()
-        sys.exit(0 if ok1 and ok2 else 1)
+        sys.exit(0 if ok0 and ok1 and ok2 else 1)
     else:
         sys.exit(__doc__)

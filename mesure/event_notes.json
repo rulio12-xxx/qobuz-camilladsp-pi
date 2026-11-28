@@ -5,34 +5,132 @@
       "spl_cible_db": 105,
       "_spl": "niveau de reference cinema/home (85 dB + 20 dB de reserve)",
       "criteres": {
-        "accord_GD_hz":            {"bon": 0.5, "mauvais": 3, "poids": 1},
-        "extension_f3_hz":         {"bon": 30, "mauvais": 60, "poids": 1},
-        "bosse_somme_db":          {"bon": 1, "mauvais": 4, "poids": 1},
-        "retard_groupe_cycles":    {"bon": 1.0, "mauvais": 2.0, "poids": 1},
-        "resonance_tuyau_db":      {"bon": -30, "mauvais": -15, "poids": 1},
-        "forme_GD_db":             {"bon": 0.5, "mauvais": 3, "poids": 1},
-        "compression_db":          {"bon": 0.5, "mauvais": 3, "poids": 1.5},
-        "h3_pct":                  {"bon": 1, "mauvais": 10, "log": true, "poids": 1.5},
-        "h2_pct":                  {"bon": 1, "mauvais": 10, "log": true, "poids": 0.5},
-        "niveau_max_propre_db":    {"bon": 105, "mauvais": 90, "poids": 1}
+        "accord_GD_hz": {
+          "bon": 0.5,
+          "mauvais": 3,
+          "poids": 1
+        },
+        "extension_f3_hz": {
+          "bon": 30,
+          "mauvais": 60,
+          "poids": 1
+        },
+        "bosse_somme_db": {
+          "bon": 1,
+          "mauvais": 4,
+          "poids": 1
+        },
+        "retard_groupe_cycles": {
+          "bon": 1.0,
+          "mauvais": 2.0,
+          "poids": 1
+        },
+        "resonance_tuyau_db": {
+          "bon": -30,
+          "mauvais": -15,
+          "poids": 1
+        },
+        "forme_GD_db": {
+          "bon": 0.5,
+          "mauvais": 3,
+          "poids": 1
+        },
+        "compression_db": {
+          "bon": 0.5,
+          "mauvais": 3,
+          "poids": 1.5
+        },
+        "h3_pct": {
+          "bon": 1,
+          "mauvais": 10,
+          "log": true,
+          "poids": 1.5
+        },
+        "h2_pct": {
+          "bon": 1,
+          "mauvais": 10,
+          "log": true,
+          "poids": 0.5
+        },
+        "niveau_max_propre_db": {
+          "bon": 105,
+          "mauvais": 90,
+          "poids": 1
+        },
+        "vitesse_air_ms": {
+          "bon": 10,
+          "mauvais": 20,
+          "poids": 1
+        }
       }
     },
     "pro": {
       "spl_cible_db": 115,
       "_spl": "sono / monitoring fort niveau",
       "criteres": {
-        "accord_GD_hz":            {"bon": 1, "mauvais": 5, "poids": 1},
-        "extension_f3_hz":         {"bon": 40, "mauvais": 80, "poids": 1},
-        "bosse_somme_db":          {"bon": 2, "mauvais": 6, "poids": 1},
-        "retard_groupe_cycles":    {"bon": 1.5, "mauvais": 3.0, "poids": 1},
-        "resonance_tuyau_db":      {"bon": -25, "mauvais": -10, "poids": 1},
-        "forme_GD_db":             {"bon": 1, "mauvais": 3, "poids": 1},
-        "compression_db":          {"bon": 1, "mauvais": 3, "poids": 1.5},
-        "h3_pct":                  {"bon": 3, "mauvais": 10, "log": true, "poids": 1.5},
-        "h2_pct":                  {"bon": 3, "mauvais": 10, "log": true, "poids": 0.5},
-        "niveau_max_propre_db":    {"bon": 115, "mauvais": 100, "poids": 1}
+        "accord_GD_hz": {
+          "bon": 1,
+          "mauvais": 5,
+          "poids": 1
+        },
+        "extension_f3_hz": {
+          "bon": 40,
+          "mauvais": 80,
+          "poids": 1
+        },
+        "bosse_somme_db": {
+          "bon": 2,
+          "mauvais": 6,
+          "poids": 1
+        },
+        "retard_groupe_cycles": {
+          "bon": 1.5,
+          "mauvais": 3.0,
+          "poids": 1
+        },
+        "resonance_tuyau_db": {
+          "bon": -25,
+          "mauvais": -10,
+          "poids": 1
+        },
+        "forme_GD_db": {
+          "bon": 1,
+          "mauvais": 3,
+          "poids": 1
+        },
+        "compression_db": {
+          "bon": 1,
+          "mauvais": 3,
+          "poids": 1.5
+        },
+        "h3_pct": {
+          "bon": 3,
+          "mauvais": 10,
+          "log": true,
+          "poids": 1.5
+        },
+        "h2_pct": {
+          "bon": 3,
+          "mauvais": 10,
+          "log": true,
+          "poids": 0.5
+        },
+        "niveau_max_propre_db": {
+          "bon": 115,
+          "mauvais": 100,
+          "poids": 1
+        },
+        "vitesse_air_ms": {
+          "bon": 17,
+          "mauvais": 30,
+          "poids": 1
+        }
       }
     }
   },
-  "propre": {"compression_max_db": 1.0, "h3_max_pct": 3.0}
+  "propre": {
+    "compression_max_db": 1.0,
+    "h3_max_pct": 3.0
+  },
+  "_vitesse": "vitesse crete de l'air au col de l'event, mesuree avec le micro calibre (event.py calib). Repere classique : 17 m/s = 5 % de la vitesse du son, debut du souffle pour un event droit ; un event arrondi tolere davantage."
 }

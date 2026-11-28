@@ -36,6 +36,7 @@ NOMS = {
     "h3_pct": "H3 au niveau cible (%)",
     "h2_pct": "H2 au niveau cible (%)",
     "niveau_max_propre_db": "Niveau max propre (dB SPL)",
+    "vitesse_air_ms": "Vitesse de l'air dans l'event au niveau cible (m/s)",
 }
 
 
@@ -49,6 +50,24 @@ def note(v, s):
     return round(10 * min(1.0, max(0.0, fr)), 1)
 
 
+RHO = 1.2
+
+
+def vitesse_air(palier, geo):
+    """Vitesse crete de l'air au col de l'event (m/s), d'apres la pression en champ proche
+    a la sortie : p = rho * omega * a * u (piston, ka petit), puis conservation du debit."""
+    if not geo or "spl_crete_db" not in palier or "_centres" not in palier:
+        return None
+    am, a0 = geo["rayon_sortie_m"], geo["rayon_gorge_m"]
+    best = 0.0
+    for fc, spl in zip(palier["_centres"], palier["spl_crete_db"]):
+        if 20 <= fc <= 150:
+            p = 20e-6 * 10 ** (spl / 20)
+            u = p / (RHO * 2 * math.pi * fc * am) * (am / a0) ** 2
+            best = max(best, u)
+    return best
+
+
 def _interp(paliers, v, cle):
     pts = sorted((p["volume_db"], p.get(cle, 0.0)) for p in paliers)
     for (v1, y1), (v2, y2) in zip(pts, pts[1:]):
@@ -57,14 +76,19 @@ def _interp(paliers, v, cle):
     return None
 
 
-def niveau(paliers, spl, cible, propre):
+def niveau(paliers, spl, cible, propre, geo=None):
     """Valeurs de compression, H2, H3 au niveau cible, niveau max propre, et remarque."""
     if not paliers:
         return {}, "pas de paliers de niveau (event.py niveaux)"
+    for p in paliers:
+        u = vitesse_air(p, geo)
+        if u is not None:
+            p["vitesse_air_ms"] = u
     haut = max(paliers, key=lambda p: p["volume_db"])
     out, rem = {}, None
     vals = lambda p: {"compression_db": abs(min(0.0, p.get("compression_max_db", 0.0))),
-                      "h3_pct": p["h3_max_pct"], "h2_pct": p["h2_max_pct"]}
+                      "h3_pct": p["h3_max_pct"], "h2_pct": p["h2_max_pct"],
+                      "vitesse_air_ms": p.get("vitesse_air_ms")}
     if spl is None:
         out.update(vals(haut))
         rem = f"niveau non calibre : juge au palier le plus fort ({haut['volume_db']:g} dB CamillaDSP)"
@@ -79,6 +103,8 @@ def niveau(paliers, spl, cible, propre):
                 out["compression_db"] = abs(min(0.0, _interp(paliers, v_cible, "compression_max_db") or 0.0))
                 out["h3_pct"] = _interp(paliers, v_cible, "h3_max_pct")
                 out["h2_pct"] = _interp(paliers, v_cible, "h2_max_pct")
+                if "vitesse_air_ms" in haut:
+                    out["vitesse_air_ms"] = _interp(paliers, v_cible, "vitesse_air_ms")
         elif "arret" in haut:
             out.update(vals(haut))
             rem = (f"limite atteinte a {s0 + haut['volume_db'] - v0:.0f} dB SPL, avant la cible "
@@ -104,8 +130,9 @@ def valeurs(res, cote, paliers, spl, ref, propre):
                                    default=-60.0) if "echelle_event_db" in r else None),
         "forme_GD_db": res.get("ecart_forme_GD_30_150_db"),
     }
-    n, rem = niveau(paliers, spl, ref["spl_cible_db"], propre)
-    v.update({k: n.get(k) for k in ("compression_db", "h3_pct", "h2_pct", "niveau_max_propre_db")})
+    n, rem = niveau(paliers, spl, ref["spl_cible_db"], propre, res.get("geometrie"))
+    v.update({k: n.get(k) for k in ("compression_db", "h3_pct", "h2_pct", "niveau_max_propre_db",
+                                    "vitesse_air_ms")})
     return v, rem
 
 

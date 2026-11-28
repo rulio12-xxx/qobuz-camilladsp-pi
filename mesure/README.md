@@ -120,6 +120,24 @@ cible, niveau max propre (compression < 1 dB et H3 < 3 %). Note globale ponderee
   boucle, Entree pour arreter ; ponderation C, une appli de telephone suffit pour
   commencer). Comme la norme cinema : 85 dB de bruit rose = 105 dB de crete.
   La crete du sweep des paliers est 16,9 dB au-dessus du bruit rose.
+
+Calibreur de micro (1 kHz, 94 ou 114 dB) : niveaux absolus en dB SPL.
+
+    python3 event.py calib 2026-11-28 --niveau 94    # gain normal, avant les mesures
+    python3 event.py rose G --mesure 2026-11-28      # micro calibre a la place d'ecoute : remplace --spl
+    python3 event.py calib 2026-11-28 --niveau 114   # apres avoir baisse le gain pour les paliers
+
+- A refaire a chaque changement de gain du Scarlett ; chaque mesure garde la calibration en cours.
+- Avec calibration, les paliers donnent le dB SPL au micro et l'analyse note la vitesse
+  de l'air dans l'event (critere `vitesse_air_ms`, repere 17 m/s = 5 % de c).
+
+Preampli et config CamillaDSP : chaque mesure lit la config active et enregistre le
+gain fixe du canal (filtres Gain comme `preamp`, gains des mixers) ; les niveaux sont
+compares en volume effectif (volume + gain de la config). Les paliers et la mesure du
+bruit rose refusent une config qui fausserait la mesure : compresseur (`tube`),
+loudness actif, sweep a moins de 3 dB du limiteur ou au-dessus de -1 dBFS
+(`--accepter-config` pour passer outre). Les paliers s'arretent si le gain change en route.
+`--spl V:SPL:GAIN` : le gain de config est affiche par `event.py rose G`.
   Sans lui, compression et distorsion sont jugees au palier le plus fort, et c'est ecrit.
 - Sorties : `analyse/notes.md` et `analyse/notes.json`.
 
