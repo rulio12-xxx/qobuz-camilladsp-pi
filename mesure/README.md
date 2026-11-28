@@ -88,6 +88,19 @@ document "Protocole de mesure de l'event bass-reflex" (claude.ai).
   et `analyse/` (resume.md, resultats.json, courbes PNG si matplotlib est installe).
 - `event_analyse.py` lit aussi les fichiers REW (.mdat ou export texte).
 
+Fort niveau (en journee) : paliers croissants sur l'event ou le woofer, micro en place.
+
+    python3 event.py niveaux 2026-11-28 "event G" -40 -34 -28 -22 -16 -10
+
+- Sweep 20 Hz-20 kHz (`event_G_fort.wav`, cree par `gen`). Confirmation `oui` avant
+  de lancer, plafond -10 dB par defaut (`--volume-max`), volume remis a la fin meme sur Ctrl-C.
+- A chaque palier : compression du grave par rapport au premier palier, H2 et H3
+  (methode de Farina), pic du micro. Arret au premier signe de limite :
+  compression > 3 dB, H3 > 10 % (20-150 Hz) ou micro > -3 dBFS.
+- Le micro colle a l'event sature vite : baisser le gain du Scarlett avant (et
+  le garder pour tous les paliers).
+- Resultat : `resultats/event/<session>/<nom>_niveaux.json` + une reponse par palier.
+
 ## Resultats
 
 `resultats/` : resultats dates. `history/` : courbes avant/apres de septembre.

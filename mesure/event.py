@@ -5,6 +5,7 @@
     python3 event.py mesure <session> <nom>               # joue + enregistre + deconvolue + sauvegarde
     python3 event.py analyse <session> [options cotes]    # analyse numerique de la session
     python3 event.py liste <session>                      # mesures deja faites
+    python3 event.py niveaux <session> "event G" -40 -34 -28 -22 -16   # paliers croissants
     python3 event.py selftest                             # test complet sur une enceinte simulee
 
 <nom> : "woofer G", "woofer G2", "event G", "event G2", "event G b", "bruit G",
@@ -18,6 +19,14 @@ Signal : un sweep log 10 Hz-20 kHz de 16 s, sur un seul canal, apres 7,5 s de
 silence (reveil de la chaine), joue par MPD comme ir2.py, micro sur l'entree 1
 du Scarlett. Le volume CamillaDSP est verifie avant chaque mesure (-40 dB max
 par defaut, option --volume-max).
+
+Paliers de niveau : sweep 20 Hz-20 kHz (moins d'excursion sous l'accord), un
+palier par volume, du plus bas au plus haut. A chaque palier : compression du
+grave par rapport au premier palier (niveau normalise par le volume), H2 et H3
+(harmoniques separees par la methode de Farina), pic du micro. Arret automatique
+au premier signe de limite (compression > 3 dB, H3 > 10 %, micro > -3 dBFS),
+plafond -10 dB par defaut, confirmation "oui" avant de lancer, volume remis a la
+fin meme sur Ctrl-C. A faire en journee.
 
 Phase : MPD ne demarre pas avec une latence fixe, donc deux mesures separees
 n'ont pas de repere de temps commun. Woofer et event en champ proche etant a
@@ -50,27 +59,34 @@ WARMUP_S = 7.5
 TAIL_S = 3.0
 PRE_MS, WIN_MS, FADE_MS = 50, 1000, 150
 VOLUME_MAX_DEFAUT = -40.0
+# paliers de niveau : sweep qui commence a 20 Hz (moins d'excursion sous l'accord)
+F1_FORT = 20.0
+VOLUME_MAX_FORT = -10.0          # plafond par defaut des paliers (option --volume-max)
+ARRET_COMPRESSION_DB = 3.0       # arret si le grave perd plus que ca par rapport au 1er palier
+ARRET_H3_DB = -20.0              # arret si H3 > 10 % entre 20 et 150 Hz
+ARRET_PIC_DBFS = -3.0            # arret si le micro approche la saturation
 OUT = os.path.join(HERE, "resultats", "event")
 NOM_RE = re.compile(r"^(woofer|event|bruit)\s+([GD])(\s*\d*)(\s*[a-z]?)$", re.I)
 
 
-def sweep():
-    return generate_log_sweep(F1, F2, SWEEP_DUR, FS) * 0.7
+def sweep(f1=F1):
+    return generate_log_sweep(f1, F2, SWEEP_DUR, FS) * 0.7
 
 
-def wav_path(cote):
-    return os.path.join(MUSIQUE, f"event_{cote}.wav")
+def wav_path(cote, fort=False):
+    return os.path.join(MUSIQUE, f"event_{cote}{'_fort' if fort else ''}.wav")
 
 
 def gen():
-    s = sweep()
     n = int((WARMUP_S + SWEEP_DUR + TAIL_S) * FS)
-    for cote, ch in (("G", 0), ("D", 1)):
-        st = np.zeros((n, 2))
-        a = int(WARMUP_S * FS)
-        st[a:a + len(s), ch] = s
-        write_wav(wav_path(cote), st, FS, channels=2, sampwidth=3)
-        print(f"OK : {wav_path(cote)}, {n / FS:.1f} s")
+    for fort, f1 in ((False, F1), (True, F1_FORT)):
+        s = sweep(f1)
+        for cote, ch in (("G", 0), ("D", 1)):
+            st = np.zeros((n, 2))
+            a = int(WARMUP_S * FS)
+            st[a:a + len(s), ch] = s
+            write_wav(wav_path(cote, fort), st, FS, channels=2, sampwidth=3)
+            print(f"OK : {wav_path(cote, fort)}, {n / FS:.1f} s")
     subprocess.run(["mpc", "-q", "update", "--wait"])
 
 
@@ -85,10 +101,10 @@ def snapshot():
     return json.loads(out)
 
 
-def record(path, cote, jouer=True):
+def record(path, cote, jouer=True, fort=False):
     total = WARMUP_S + SWEEP_DUR + TAIL_S
     if jouer:
-        mpc("clear"); mpc("add", os.path.basename(wav_path(cote)))
+        mpc("clear"); mpc("add", os.path.basename(wav_path(cote, fort)))
     p = subprocess.Popen(["arecord", "-D", DEVICE, "-f", "S32_LE", "-r", str(FS), "-c", "2",
                           "-d", str(int(total) + 3), path],
                          stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -100,15 +116,15 @@ def record(path, cote, jouer=True):
         mpc("stop")
 
 
-def deconv(rec):
-    s = sweep()
+def deconv(rec, f1=F1):
+    s = sweep(f1)
     n = len(rec) + len(s)
     nf = 1 << (n - 1).bit_length()
     X = np.fft.rfft(s, nf)
     Y = np.fft.rfft(rec, nf)
     f = np.fft.rfftfreq(nf, 1 / FS)
     inv = np.conj(X) / (np.abs(X) ** 2 + 1e-4 * np.max(np.abs(X) ** 2))
-    inv[(f < F1 * 0.9) | (f > F2 * 1.02)] = 0
+    inv[(f < f1 * 0.9) | (f > F2 * 1.02)] = 0
     return np.fft.irfft(Y * inv, nf)
 
 
@@ -203,6 +219,146 @@ def liste(session):
         print(f"{m['nom']:12} {m['date']}  pic {m['pic_micro_dbfs']:+.1f} dBFS  volume {m['volume_db']} dB")
 
 
+
+# ---------------------------------------------------------------- paliers de niveau
+def set_volume(db_):
+    code = ("from camilladsp import CamillaClient\nc=CamillaClient('127.0.0.1',1234)\n"
+            f"c.connect()\nc.volume.set_main_volume({float(db_)})")
+    subprocess.run([VENV_PY, "-c", code], check=True, capture_output=True)
+
+
+def spectre(x, nf=1 << 17):
+    return np.fft.rfftfreq(nf, 1 / FS), np.fft.rfft(x, nf)
+
+
+def analyse_niveau(rec, f1=F1_FORT):
+    """Fondamental et harmoniques H2, H3 (methode Farina : la k-ieme harmonique
+    sort L*ln(k) secondes avant la reponse lineaire)."""
+    ir = deconv(rec, f1)
+    a0 = int(WARMUP_S * FS)
+    pk = a0 + int(np.argmax(np.abs(ir[a0:a0 + int(1.5 * FS)])))
+    L = SWEEP_DUR / np.log(F2 / f1)
+    lin = fenetre(ir, pk - int(PRE_MS / 1000 * FS))
+    f, H1 = spectre(lin)
+    harm = {}
+    for k in (2, 3):
+        d = int(round(L * np.log(k) * FS))
+        st = pk - d - int(0.02 * FS)
+        x = ir[st:st + int(0.3 * FS)].copy()
+        x[-int(0.05 * FS):] *= np.hanning(int(0.1 * FS))[-int(0.05 * FS):]
+        _, Hk = spectre(x)
+        harm[k] = Hk
+    return f, H1, harm, lin
+
+
+def bandes(f, H, centres):
+    out = []
+    for c in centres:
+        s = (f >= c * 2 ** (-1 / 12)) & (f < c * 2 ** (1 / 12))
+        out.append(10 * np.log10(np.mean(np.abs(H[s]) ** 2) + 1e-30))
+    return np.array(out)
+
+
+CENTRES_FORT = np.array([20 * 2 ** (i / 6) for i in range(0, 34)])   # 20 Hz - ~1 kHz, 1/6 oct
+
+
+def indicateurs(f, H1, harm, volume, ref=None):
+    """Niveau normalise (dB - volume), compression vs palier de reference, H2/H3 en %."""
+    n1 = bandes(f, H1, CENTRES_FORT) - volume
+    res = {"volume_db": volume, "norm_db": n1}
+    for k in (2, 3):
+        hk = bandes(f, harm[k], CENTRES_FORT * k)
+        res[f"h{k}_db"] = hk - (n1 + volume)
+    if ref is not None:
+        res["compression_db"] = n1 - ref["norm_db"]
+    return res
+
+
+def resume_palier(r):
+    z = (CENTRES_FORT >= 20) & (CENTRES_FORT <= 150)
+    out = {"volume_db": r["volume_db"]}
+    if "compression_db" in r:
+        c = r["compression_db"][z]
+        i = int(np.argmin(c))
+        out["compression_max_db"] = round(float(c[i]), 2)
+        out["compression_a_hz"] = round(float(CENTRES_FORT[z][i]), 1)
+    for k in (2, 3):
+        h = r[f"h{k}_db"][z]
+        i = int(np.argmax(h))
+        out[f"h{k}_max_pct"] = round(float(100 * 10 ** (h[i] / 20)), 2)
+        out[f"h{k}_a_hz"] = round(float(CENTRES_FORT[z][i]), 1)
+    return out
+
+
+def verdict(s, pic):
+    if pic > ARRET_PIC_DBFS:
+        return f"micro a {pic:+.1f} dBFS (saturation proche)"
+    if s.get("compression_max_db", 0) < -ARRET_COMPRESSION_DB:
+        return f"compression {s['compression_max_db']} dB a {s['compression_a_hz']} Hz"
+    if 20 * np.log10(max(s["h3_max_pct"], 1e-6) / 100) > ARRET_H3_DB:
+        return f"H3 {s['h3_max_pct']} % a {s['h3_a_hz']} Hz"
+    return None
+
+
+def niveaux(session, nom, volumes, volume_max, oui=False, enregistreur=None):
+    """Mesure a volumes croissants, s'arrete au premier signe de limite, remet le volume."""
+    m = NOM_RE.match(nom.strip())
+    if not m or m.group(1).lower() == "bruit":
+        sys.exit("Nom invalide pour les paliers : 'event G', 'woofer D'...")
+    cote = m.group(2).upper()
+    volumes = sorted(volumes)
+    if volumes[-1] > volume_max:
+        sys.exit(f"Palier {volumes[-1]} dB au-dessus du plafond {volume_max} dB (option --volume-max).")
+    simu = enregistreur is not None
+    if not simu:
+        if not os.path.exists(wav_path(cote, True)):
+            sys.exit(f"{wav_path(cote, True)} absent : lancer d'abord  python3 event.py gen")
+        v0 = snapshot()["volume"]
+        print(f"Paliers {volumes} dB sur {nom}, sweep {F1_FORT:g} Hz-20 kHz. Volume actuel {v0} dB, remis a la fin.")
+        print(f"Arret automatique : compression > {ARRET_COMPRESSION_DB} dB, H3 > 10 %, micro > {ARRET_PIC_DBFS} dBFS.")
+        print("Ctrl-C a tout moment : le volume est remis.")
+        if not oui and input("Taper oui pour lancer : ").strip().lower() != "oui":
+            sys.exit("Annule.")
+    os.makedirs(os.path.join(OUT, session), exist_ok=True)
+    ref, resume = None, []
+    try:
+        for v in volumes:
+            if simu:
+                rec = enregistreur(v)
+            else:
+                set_volume(v)
+                time.sleep(0.5)
+                path = f"/tmp/event_niv_{v}.wav"
+                record(path, cote, fort=True)
+                rec, _ = read_wav_mono(path, channel=MIC_CHANNEL)
+            pic = float(20 * np.log10(np.max(np.abs(rec)) + 1e-12))
+            f, H1, harm, lin = analyse_niveau(rec)
+            r = indicateurs(f, H1, harm, v, ref)
+            if ref is None:
+                ref = r
+            s = resume_palier(r)
+            s["pic_micro_dbfs"] = round(pic, 1)
+            resume.append(s)
+            np.savez_compressed(fichier(session, f"{nom} niv{v:g}") + ".npz", ir=lin, fs=FS)
+            print(f"  {v:+6.1f} dB : pic {pic:+5.1f} dBFS, compression {s.get('compression_max_db', 0):+5.2f} dB"
+                  f" ({s.get('compression_a_hz', '-')} Hz), H2 {s['h2_max_pct']:5.2f} % ({s['h2_a_hz']} Hz),"
+                  f" H3 {s['h3_max_pct']:5.2f} % ({s['h3_a_hz']} Hz)")
+            raison = verdict(s, pic)
+            if raison:
+                print(f"ARRET au palier {v} dB : {raison}")
+                s["arret"] = raison
+                break
+    except KeyboardInterrupt:
+        print("Interrompu.")
+    finally:
+        if not simu:
+            set_volume(v0)
+            print(f"Volume remis a {v0} dB")
+    detail = {"nom": nom, "centres_hz": [round(c, 1) for c in CENTRES_FORT], "paliers": resume}
+    json.dump(detail, open(fichier(session, f"{nom} niveaux") + ".json", "w"), indent=1, ensure_ascii=False)
+    return resume
+
+
 # ---------------------------------------------------------------- auto-test
 def _enceinte_simulee(fb, nf):
     """Reponses champ proche woofer et event d'un bass-reflex (alignement B4, Fb = fb),
@@ -258,6 +414,34 @@ def selftest():
     return ok
 
 
+def selftest_niveaux():
+    """Event simule qui compresse a fort niveau (saturation douce du debit) :
+    les paliers doivent voir la compression et H3 monter, puis s'arreter."""
+    global OUT
+    OUT = os.path.join("/tmp", "event_selftest")
+    rng = np.random.default_rng(5)
+    s = sweep(F1_FORT)
+    n = int((WARMUP_S + SWEEP_DUR + TAIL_S + 3) * FS)
+    _, irp = _enceinte_simulee(36.0, 1 << 16)
+    y_lin = np.convolve(s, irp[:int(0.8 * FS)])
+    y_lin /= np.max(np.abs(y_lin))
+
+    def enregistreur(v):
+        g = 10 ** ((v + 10) / 20)                 # a -10 dB : saturation franche
+        y = np.tanh(2.0 * g * y_lin) / 2.0         # compression douce, symetrique (H3)
+        rec = np.zeros(n)
+        lat = int(WARMUP_S * FS + rng.integers(int(0.05 * FS), int(0.6 * FS)))
+        rec[lat:lat + len(y)] = y[:n - lat]
+        return rec * 0.3 + 1e-5 * rng.standard_normal(n)
+
+    r = niveaux("simu", "event G", [-40, -34, -28, -22, -16, -10], -10, enregistreur=enregistreur)
+    bas, haut = r[1], r[-1]
+    ok = (abs(bas.get("compression_max_db", 0)) < 0.3 and bas["h3_max_pct"] < 1
+          and "arret" in haut and haut["h3_max_pct"] > bas["h3_max_pct"] * 5)
+    print("SELFTEST NIVEAUX", "OK" if ok else "ECHEC")
+    return ok
+
+
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         sys.exit(__doc__)
@@ -276,7 +460,19 @@ if __name__ == "__main__":
         analyse(sys.argv[2], sys.argv[3:])
     elif cmd == "liste":
         liste(sys.argv[2])
+    elif cmd == "niveaux":
+        args = sys.argv[2:]
+        vmax = VOLUME_MAX_FORT
+        if "--volume-max" in args:
+            i = args.index("--volume-max"); vmax = float(args[i + 1]); del args[i:i + 2]
+        oui = "--oui" in args
+        args = [x for x in args if x != "--oui"]
+        if len(args) < 3:
+            sys.exit('Usage : python3 event.py niveaux <session> "event G" -40 -34 -28 -22 -16')
+        niveaux(args[0], args[1], [float(x) for x in args[2:]], vmax, oui)
     elif cmd == "selftest":
-        sys.exit(0 if selftest() else 1)
+        ok1 = selftest()
+        ok2 = selftest_niveaux()
+        sys.exit(0 if ok1 and ok2 else 1)
     else:
         sys.exit(__doc__)
